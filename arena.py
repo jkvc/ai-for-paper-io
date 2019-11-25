@@ -76,9 +76,11 @@ class Observation:
         for row in range(-new_observation.radius, new_observation.radius + 1):
             for col in range(-new_observation.radius, new_observation.radius + 1):
                 if (row, col) not in new_observation.content:
-                    del self.content[(row, col)]
+                    if (row, col) in self.content:
+                        del self.content[(row, col)]
                 else:
-                    self.content[(row, col)] = new_observation[(row, col)]
+                    self.content[(row, col)] = \
+                        new_observation.content[(row, col)]
 
     def to_string_full(self):
         rowidx = []
@@ -141,3 +143,7 @@ if __name__ == "__main__":
     new_observation.add_relative((0, 1), 'a*')
     print('new')
     print(new_observation)
+
+    o.update_memory(new_observation)
+    print('old updated')
+    print(o.to_string_full())
