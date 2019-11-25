@@ -51,28 +51,42 @@ class Observation:
     def __init__(self):
         self.content = {}
 
-    def add(self, pos, content):
-        self.content[pos] = content
+    def add(self, observer_pos, pos, content):
+        relative_pos = (
+            pos[0] - observer_pos[0],
+            pos[1] - observer_pos[1]
+        )
+        self.content[relative_pos] = content
 
-    def to_string(self, row_begin, row_end, col_begin, col_end, center_row, center_col):
+    def shift(self, offset_row, offset_col):
+        newcontent = {}
+        for pos in self.content:
+            newpos = (
+                pos[0] + offset_row,
+                pos[1] + offset_col
+            )
+            newcontent[newpos] = self.content[pos]
+        self.content = newcontent
+
+    def to_string(self, center_row, center_col, row_begin, row_end, col_begin, col_end):
         strlist = []
 
         def get_horizontal_border():
             l = ['   ']
             for col in range(col_begin, col_end + 1):
-                l.append(str(col - center_col).rjust(2, '0'))
+                l.append(str(col).rjust(2, '0'))
                 l.append(' ')
             return ''.join(l) + '\n'
 
         strlist.append(get_horizontal_border())
         for row in range(row_begin, row_end + 1):
-            strlist.append(f'{str(row - center_row).rjust(2, "0")} ')
+            strlist.append(f'{str(row).rjust(2, "0")} ')
             for col in range(col_begin, col_end + 1):
                 ch = self.content[(row, col)] if (
                     row, col) in self.content else ' '
                 strlist.append(ch)
                 strlist.append('  ' if len(ch) == 1 else ' ')
-            strlist.append(f' {str(row - center_row).rjust(2, "0")}\n')
+            strlist.append(f' {str(row).rjust(2, "0")}\n')
         strlist.append(get_horizontal_border())
 
         return ''.join(strlist)
@@ -85,7 +99,10 @@ if __name__ == "__main__":
     print(arena)
 
     o = Observation()
-    o.add((1, 1), 'A')
-    o.add((1, 2), 'a*')
-    o.add((0, 0), 'X')
-    print(o.to_string(-1, 3, -1, 3, 1, 1))
+    o.add((1, 1), (1, 1), 'A')
+    o.add((1, 1), (1, 2), 'a*')
+    o.add((1, 1), (0, 0), 'X')
+    print(o.to_string(1, 1, -1, 1, -1, 1))
+
+    o.shift(1, 1)
+    print(o.to_string(1, 1, -2, 2, -2, 2))
