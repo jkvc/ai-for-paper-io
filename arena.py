@@ -48,8 +48,9 @@ class Arena:
 
 
 class Observation:
-    def __init__(self):
+    def __init__(self, radius):
         self.content = {}
+        self.radius = radius
 
     def add(self, observer_pos, pos, content):
         relative_pos = (
@@ -68,20 +69,32 @@ class Observation:
             newcontent[newpos] = self.content[pos]
         self.content = newcontent
 
-    def to_string(self, center_row, center_col, row_begin, row_end, col_begin, col_end):
+    def to_string_full(self):
+        rowidx = []
+        colidx = []
+        for (row, col) in self.content:
+            rowidx.append(row)
+            colidx.append(col)
+        minrow = min(rowidx)
+        maxrow = max(rowidx)
+        mincol = min(colidx)
+        maxcol = max(colidx)
+        return self.to_string(minrow, maxrow, mincol, maxcol)
+
+    def to_string(self, min_row, max_row, min_col, max_col):
         strlist = []
 
         def get_horizontal_border():
             l = ['   ']
-            for col in range(col_begin, col_end + 1):
+            for col in range(min_col, max_col+1):
                 l.append(str(col).rjust(2, '0'))
                 l.append(' ')
             return ''.join(l) + '\n'
 
         strlist.append(get_horizontal_border())
-        for row in range(row_begin, row_end + 1):
+        for row in range(min_row, max_row+1):
             strlist.append(f'{str(row).rjust(2, "0")} ')
-            for col in range(col_begin, col_end + 1):
+            for col in range(min_col, max_col+1):
                 ch = self.content[(row, col)] if (
                     row, col) in self.content else ' '
                 strlist.append(ch)
@@ -91,6 +104,9 @@ class Observation:
 
         return ''.join(strlist)
 
+    def __str__(self):
+        return self.to_string(-self.radius, self.radius, -self.radius, self.radius)
+
 
 if __name__ == "__main__":
     arena = Arena(20, 20, {'A': (1, 1), 'B': (8, 8), 'X': (0, 0)})
@@ -98,11 +114,13 @@ if __name__ == "__main__":
     arena.agent_trails['A'].add((1, 2))
     print(arena)
 
-    o = Observation()
+    o = Observation(1)
     o.add((1, 1), (1, 1), 'A')
     o.add((1, 1), (1, 2), 'a*')
     o.add((1, 1), (0, 0), 'X')
-    print(o.to_string(1, 1, -1, 1, -1, 1))
+    print(o)
 
     o.shift(1, 1)
-    print(o.to_string(1, 1, -2, 2, -2, 2))
+    print(o)
+
+    print(o.to_string_full())
