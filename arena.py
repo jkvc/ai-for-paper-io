@@ -57,6 +57,9 @@ class Observation:
             pos[0] - observer_pos[0],
             pos[1] - observer_pos[1]
         )
+        self.add_relative(relative_pos, content)
+
+    def add_relative(self, relative_pos, content):
         self.content[relative_pos] = content
 
     def shift(self, offset_row, offset_col):
@@ -68,6 +71,14 @@ class Observation:
             )
             newcontent[newpos] = self.content[pos]
         self.content = newcontent
+
+    def update_memory(self, new_observation):
+        for row in range(-new_observation.radius, new_observation.radius + 1):
+            for col in range(-new_observation.radius, new_observation.radius + 1):
+                if (row, col) not in new_observation.content:
+                    del self.content[(row, col)]
+                else:
+                    self.content[(row, col)] = new_observation[(row, col)]
 
     def to_string_full(self):
         rowidx = []
@@ -109,18 +120,24 @@ class Observation:
 
 
 if __name__ == "__main__":
-    arena = Arena(20, 20, {'A': (1, 1), 'B': (8, 8), 'X': (0, 0)})
-    arena.update_agent_pos('B', (19, 19))
-    arena.agent_trails['A'].add((1, 2))
-    print(arena)
+    # arena = Arena(20, 20, {'A': (1, 1), 'B': (8, 8), 'X': (0, 0)})
+    # arena.update_agent_pos('B', (19, 19))
+    # arena.agent_trails['A'].add((1, 2))
+    # print(arena)
 
     o = Observation(1)
-    o.add((1, 1), (1, 1), 'A')
-    o.add((1, 1), (1, 2), 'a*')
-    o.add((1, 1), (0, 0), 'X')
+    o.add_relative((0, 0), 'A')
+    o.add_relative((0, 1), 'a*')
+    o.add_relative((1, 1), 'b*')
+    print('old')
     print(o)
 
-    o.shift(1, 1)
+    o.shift(0, 1)
+    print('old shifted')
     print(o)
 
-    print(o.to_string_full())
+    new_observation = Observation(1)
+    new_observation.add_relative((0, 0), 'A')
+    new_observation.add_relative((0, 1), 'a*')
+    print('new')
+    print(new_observation)
