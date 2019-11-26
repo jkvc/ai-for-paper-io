@@ -1,7 +1,7 @@
-from arena import *
+from arena import Arena
 from agent import *
 from direction import *
-from observation import *
+from observation import Observation
 
 
 class Game:
@@ -54,9 +54,13 @@ class Game:
 
 if __name__ == "__main__":
     game = Game(25, 25, vision_radius=5)
-    human_agent = HumanAgent('A')
+
+    human_agent = HumanAgent('H')
     human_agent.game_oracle = game
     game.add_agent(human_agent, (3, 3), init_territory_radius=2)
+
+    random_agent = RandomAgent('R')
+    game.add_agent(random_agent, (7, 7), init_territory_radius=2)
 
     print(game)
     # print(game.arena.get_territory_size('H'))

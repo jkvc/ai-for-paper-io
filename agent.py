@@ -1,6 +1,8 @@
 import curses
-from direction import *
-from observation import *
+import arena
+from direction import Direction
+from observation import Observation
+import random
 
 
 class Agent:
@@ -9,6 +11,29 @@ class Agent:
 
     def get_move(self, observation):
         raise NotImplementedError()
+
+    @staticmethod
+    def get_trail_char(agent_char):
+        return agent_char.lower() + '*'
+
+    @staticmethod
+    def get_territory_char(agent_char):
+        return agent_char.lower()
+
+
+class RandomAgent(Agent):
+    def __init__(self, char):
+        super().__init__(char)
+
+    def get_move(self, observation):
+        possible_dir = []
+        for direction in Direction.ALL_DIRS:
+            if observation.content[direction] not in \
+                    [Agent.get_trail_char(self.char), arena.Arena.WALL_CHAR]:
+                possible_dir.append(direction)
+        if len(possible_dir) == 0:
+            return Direction.UP
+        return random.choice(possible_dir)
 
 
 class HumanAgent(Agent):

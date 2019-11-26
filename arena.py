@@ -1,6 +1,6 @@
-from agent import *
+from agent import Agent
 from direction import *
-from observation import *
+from observation import Observation
 
 
 class Arena:
@@ -148,10 +148,10 @@ class Arena:
                 return agent_char
         for agent_char in self.agent_pos:
             if (row, col) in self.agent_trails[agent_char]:
-                return agent_char.lower() + '*'
+                return Agent.get_trail_char(agent_char)
         for agent_char in self.agent_pos:
             if (row, col) in self.agent_territory[agent_char]:
-                return agent_char.lower()
+                return Agent.get_territory_char(agent_char)
         return ' '
 
     def get_observation(self, agent, radius):

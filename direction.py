@@ -3,6 +3,7 @@ class Direction:
     RIGHT = (0, 1)
     UP = (-1, 0)
     DOWN = (1, 0)
+    ALL_DIRS = [LEFT, RIGHT, UP, DOWN]
 
 
 def move(pos, direction):
