@@ -4,6 +4,11 @@ class Observation:
         self.radius = radius
 
     def add(self, observer_pos, pos, content):
+        '''
+        observe a character at the position.
+        stored information will be the pos relative to observer_pos.
+        e.g. add((3,0), (2,1), 'a') results in 'a' stored in (-1,1)
+        '''
         relative_pos = (
             pos[0] - observer_pos[0],
             pos[1] - observer_pos[1]
@@ -11,9 +16,16 @@ class Observation:
         self.add_relative(relative_pos, content)
 
     def add_relative(self, relative_pos, content):
+        '''
+        observe a char at a relative position to the observer.
+        observer is always at (0,0)
+        '''
         self.content[relative_pos] = content
 
     def shift(self, offset_row, offset_col):
+        '''
+        shift the entire observation by an offset
+        '''
         newcontent = {}
         for pos in self.content:
             newpos = (
@@ -24,6 +36,10 @@ class Observation:
         self.content = newcontent
 
     def update_memory(self, new_observation):
+        '''
+        update an old observation by overwriting with information in 
+        a newer observation within range
+        '''
         for row in range(-new_observation.radius, new_observation.radius + 1):
             for col in range(-new_observation.radius, new_observation.radius + 1):
                 if (row, col) not in new_observation.content:

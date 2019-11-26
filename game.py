@@ -20,9 +20,13 @@ class Game:
         self.game_ended = False
         self.vision_radius = vision_radius
 
-    def add_agent(self, agent, pos):
+    def add_agent(self, agent, pos, init_territory_radius=Arena.INITIAL_TERRITORY_RADIUS):
+        '''
+        add an agent to the game, add its pos to the arena
+        '''
         self.agents[agent.char] = agent
-        self.arena.add_agent(agent.char, pos)
+        self.arena.add_agent(
+            agent.char, pos, init_territory_radius=init_territory_radius)
 
     def run(self):
         while not self.game_ended:
@@ -49,10 +53,10 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(10, 10, vision_radius=5)
+    game = Game(25, 25, vision_radius=5)
     human_agent = HumanAgent('A')
     human_agent.game_oracle = game
-    game.add_agent(human_agent, (3, 3))
+    game.add_agent(human_agent, (3, 3), init_territory_radius=2)
 
     print(game)
     # print(game.arena.get_territory_size('H'))

@@ -15,7 +15,8 @@ class Arena:
         self.agent_territory = {}
         self.agent_trails = {}
 
-    def add_agent(self, agent_char, pos):
+    def add_agent(self, agent_char, pos,
+                  init_territory_radius=INITIAL_TERRITORY_RADIUS):
         '''
         - add an agent to the arena,
         - add an initial territory around the agent
@@ -32,8 +33,8 @@ class Arena:
         # populate initial territory around new agent
         self.agent_territory[agent_char] = set()
         agent_row, agent_col = pos
-        for row in range(agent_row-Arena.INITIAL_TERRITORY_RADIUS, agent_row+Arena.INITIAL_TERRITORY_RADIUS+1):
-            for col in range(agent_col-Arena.INITIAL_TERRITORY_RADIUS, agent_col+Arena.INITIAL_TERRITORY_RADIUS+1):
+        for row in range(agent_row-init_territory_radius, agent_row+init_territory_radius+1):
+            for col in range(agent_col-init_territory_radius, agent_col+init_territory_radius+1):
                 self.agent_territory[agent_char].add((row, col))
 
         # add its position
