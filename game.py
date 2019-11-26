@@ -1,5 +1,7 @@
 from arena import *
 from agent import *
+from direction import *
+from observation import *
 
 
 class Game:
@@ -31,9 +33,6 @@ class Game:
                     agent_ch, self.vision_radius
                 )
 
-                # print(
-                #     f'Getting input from agent {agent_ch}...'
-                # )
                 move_dir = agent.get_move(observation)
                 self.arena.move_agent(agent_ch, move_dir)
 
@@ -50,8 +49,8 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(20, 20)
-    human_agent = HumanAgent('H')
+    game = Game(10, 10, vision_radius=5)
+    human_agent = HumanAgent('A')
     human_agent.game_oracle = game
     game.add_agent(human_agent, (3, 3))
 

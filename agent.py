@@ -1,15 +1,6 @@
 import curses
-
-
-class Direction:
-    LEFT = (0, -1)
-    RIGHT = (0, 1)
-    UP = (-1, 0)
-    DOWN = (1, 0)
-
-
-def move(pos, direction):
-    return (pos[0] + direction[0], pos[1] + direction[1])
+from direction import *
+from observation import *
 
 
 class Agent:
@@ -30,6 +21,7 @@ class HumanAgent(Agent):
         curses.noecho()
         curses.cbreak()
         screen.keypad(True)
+        screen.clear()
 
         # add stuff to the screen
         vertical_offset = 0
