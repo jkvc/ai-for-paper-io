@@ -31,6 +31,7 @@ class HumanAgent(Agent):
         curses.cbreak()
         screen.keypad(True)
 
+        # add stuff to the screen
         vertical_offset = 0
         if self.game_oracle != None:
             oracle_str = str(self.game_oracle)
@@ -40,14 +41,15 @@ class HumanAgent(Agent):
         screen.addstr(
             vertical_offset, 0,
             f"Observation of agent {self.char}: ")
-        vertical_offset += 1
+        vertical_offset += 2
 
         observation_str = str(observation)
         screen.addstr(vertical_offset, 0, observation_str)
-        vertical_offset += observation_str.count('\n')
+        vertical_offset += observation_str.count('\n') + 1
 
         screen.addstr(vertical_offset, 0, 'Use arrow keys to move... ')
 
+        # ask for direction input
         direction = None
         try:
             while direction == None:

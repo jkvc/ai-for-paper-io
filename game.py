@@ -31,14 +31,17 @@ class Game:
                     agent_ch, self.vision_radius
                 )
 
-                print(
-                    f'Getting input from agent {agent_ch}...'
-                )
+                # print(
+                #     f'Getting input from agent {agent_ch}...'
+                # )
                 move_dir = agent.get_move(observation)
                 self.arena.move_agent(agent_ch, move_dir)
 
+            if len(self.agents) == 0:
+                break
+
     def __str__(self):
-        s = 'Game: \n'
+        s = ''
         s += 'agents: ' + str([a_ch for a_ch in self.agents]) + '\n'
         s += 'tick:' + str(self.tick) + '\n'
         s += 'vision_radius: ' + str(self.vision_radius) + '\n'
@@ -53,4 +56,5 @@ if __name__ == "__main__":
     game.add_agent(human_agent, (3, 3))
 
     print(game)
+    # print(game.arena.get_territory_size('H'))
     game.run()

@@ -43,6 +43,63 @@ class Arena:
             self.agent_trails[agent_char].add(oldpos)
         self.update_agent_pos(agent_char, newpos)
 
+        self.complete_enclosure_if_any(agent_char)
+
+    def complete_enclosure_if_any(self, agent_char):
+        # if enclosure completed
+        if self.agent_pos[agent_char] in self.agent_territory[agent_char] \
+                and len(self.agent_trails[agent_char]) != 0:
+
+            # trail becomes territory
+            self.agent_territory[agent_char] =\
+                self.agent_territory[agent_char].union(
+                    self.agent_trails[agent_char])
+            self.agent_trails[agent_char] = set()
+
+            # flood enclosed territory region
+            def flood(row, col):
+                to_fill = set()
+                touched = set()
+                queue = [(row, col)]
+                leaked = False
+                while queue:
+                    row, col = queue.pop(0)
+                    if (row, col) in touched:
+                        continue
+                    touched.add((row, col))
+
+                    if row < 0 or col < 0 or row >= self.height or col >= self.width:
+                        leaked = True
+                        continue
+                    if (row, col) in self.agent_territory[agent_char]:
+                        continue
+
+                    to_fill.add((row, col))
+                    queue.extend([
+                        (row, col+1),
+                        (row, col-1),
+                        (row+1, col),
+                        (row-1, col),
+                    ])
+
+                return to_fill, leaked
+
+            explored = set()
+            for row in range(self.height):
+                for col in range(self.width):
+                    if (row, col) in explored:
+                        continue
+                    explored.add((row, col))
+
+                    to_fill, leaked = flood(row, col)
+                    explored = explored.union(to_fill)
+                    if not leaked:
+                        self.agent_territory[agent_char] = \
+                            self.agent_territory[agent_char].union(to_fill)
+
+    def _get_trail_char(self, agent_char):
+        return agent_char.lower() + '*'
+
     def _get_char(self, row, col):
         if row < 0 or col < 0 or row >= self.height or col >= self.width:
             return Arena.WALL_CHAR
@@ -74,6 +131,9 @@ class Arena:
             for col in range(mincol, maxcol + 1):
                 observation.add(agentpos, (row, col), self._get_char(row, col))
         return observation
+
+    def get_territory_size(self, agent_ch):
+        return len(self.agent_territory[agent_ch])
 
     def __str__(self):
         strlist = []
