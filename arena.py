@@ -51,10 +51,20 @@ class Arena:
                 f'[WARN] Arena:update_gent_pos: newpos {newpos} is out of arena of shape {(self.height, self.width)}')
         self.agent_pos[agent_char] = newpos
 
+    def remove_agent(self, agent_char):
+        '''
+        - remove an agent from the arena
+        - this should be called when an agent is killed
+        '''
+        del self.agent_pos[agent_char]
+        del self.agent_territory[agent_char]
+        del self.agent_trails[agent_char]
+
     def move_agent(self, agent_char, direction):
         '''
         - move agent to a new position
         - if enclosure completed, trail -> territory, any enclosed territory flooded
+        - return a list of agents that died as a result of this move
         '''
 
         oldpos = self.agent_pos[agent_char]
@@ -63,7 +73,28 @@ class Arena:
             self.agent_trails[agent_char].add(oldpos)
         self.update_agent_pos(agent_char, newpos)
 
-        self.complete_enclosure_if_any(agent_char)
+        new_territory = self.complete_enclosure_if_any(agent_char)
+
+        # remove territory from other agents
+        if len(new_territory) != 0:
+            for other_agent_char in self.agent_territory:
+                if other_agent_char == agent_char:
+                    continue
+                self.agent_territory[other_agent_char] =\
+                    self.agent_territory[other_agent_char].difference(
+                        new_territory)
+
+        agents_to_kill = set()
+        for other_agent_char in self.agent_territory:
+            # kill an agent by stepping on their trail, you can get yourself killed
+            if newpos in self.agent_trails[other_agent_char]:
+                agents_to_kill.add(other_agent_char)
+            # kill an agent by encircling it
+            if other_agent_char != agent_char:
+                if self.agent_pos[other_agent_char] in new_territory:
+                    agents_to_kill.add(other_agent_char)
+
+        return agents_to_kill
 
     def complete_enclosure_if_any(self, agent_char):
         '''

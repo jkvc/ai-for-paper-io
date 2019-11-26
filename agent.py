@@ -21,6 +21,16 @@ class Agent:
         return agent_char.lower()
 
 
+class StationaryAgent(Agent):
+    def __init__(self, char):
+        super().__init__(char)
+        self.go_up = False
+
+    def get_move(self, observation):
+        self.go_up = not self.go_up
+        return Direction.UP if self.go_up else Direction.DOWN
+
+
 class RandomAgent(Agent):
     def __init__(self, char):
         super().__init__(char)
