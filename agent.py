@@ -1,6 +1,6 @@
 import curses
 import arena
-from direction import Direction
+from direction import Direction, opposite
 from observation import Observation
 import random
 
@@ -8,6 +8,7 @@ import random
 class Agent:
     def __init__(self, char):
         self.char = char
+        self.memory = Observation(0)
 
     def get_move(self, observation):
         raise NotImplementedError()
@@ -52,6 +53,8 @@ class HumanAgent(Agent):
         self.game_oracle = None
 
     def get_move(self, observation):
+        self.memory.update_memory(observation)
+
         screen = curses.initscr()
         curses.noecho()
         curses.cbreak()
@@ -60,10 +63,19 @@ class HumanAgent(Agent):
 
         # add stuff to the screen
         vertical_offset = 0
+
         if self.game_oracle != None:
             oracle_str = str(self.game_oracle)
-            screen.addstr(0, 0, oracle_str)
+            screen.addstr(vertical_offset, 0, oracle_str)
             vertical_offset += oracle_str.count('\n') + 1
+
+        else:
+            screen.addstr(vertical_offset, 0, 'Memory')
+            vertical_offset += 1
+
+            memory_str = self.memory.to_string_full()
+            screen.addstr(vertical_offset, 0, memory_str)
+            vertical_offset += memory_str.count('\n') + 1
 
         screen.addstr(
             vertical_offset, 0,
@@ -95,4 +107,5 @@ class HumanAgent(Agent):
             curses.echo()
             curses.endwin()
 
+        self.memory.shift(*opposite(direction))
         return direction

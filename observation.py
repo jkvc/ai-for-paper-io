@@ -55,6 +55,9 @@ class Observation:
         for (row, col) in self.content:
             rowidx.append(row)
             colidx.append(col)
+        if len(rowidx) == 0:
+            return ''
+
         minrow = min(rowidx)
         maxrow = max(rowidx)
         mincol = min(colidx)

@@ -75,13 +75,13 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(25, 25, vision_radius=5)
+    game = Game(25, 25, vision_radius=10)
 
-    a = StationaryAgent('S')
-    game.add_agent(a, (6, 6), init_territory_radius=1)
+    a = RandomAgent('S')
+    game.add_agent(a, (16, 16), init_territory_radius=1)
 
     human_agent = HumanAgent('H')
-    human_agent.game_oracle = game
+    # human_agent.game_oracle = game
     game.add_agent(human_agent, (3, 3), init_territory_radius=2)
 
     print(game)
