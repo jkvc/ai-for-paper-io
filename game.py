@@ -40,11 +40,15 @@ class Game:
 
             for agent_ch in self.agents:
                 agent = self.agents[agent_ch]
-                observation = self.arena.get_observation(
-                    agent_ch, self.vision_radius
-                )
 
-                move_dir = agent.get_move(observation)
+                if agent.is_god:
+                    observable = self.arena.get_full_arena_copy()
+                else:
+                    observable = self.arena.get_observable_arena(
+                        agent_ch, self.vision_radius
+                    )
+
+                move_dir = agent.get_move(observable)
                 to_kill = self.arena.move_agent(agent_ch, move_dir)
 
                 agents_to_kill = agents_to_kill.union(to_kill)
@@ -75,13 +79,13 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(25, 25, vision_radius=10)
+    game = Game(25, 25, vision_radius=5)
 
     a = RandomAgent('S')
     game.add_agent(a, (16, 16), init_territory_radius=1)
 
     human_agent = HumanAgent('H')
-    # human_agent.game_oracle = game
+    human_agent.is_god = True
     game.add_agent(human_agent, (3, 3), init_territory_radius=2)
 
     print(game)

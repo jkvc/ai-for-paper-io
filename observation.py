@@ -3,6 +3,12 @@ class Observation:
         self.content = {}
         self.radius = radius
 
+    @staticmethod
+    def get_copy(o):
+        o2 = Observation(o.radius)
+        o2.content = {**o.content}
+        return o2
+
     def add(self, observer_pos, pos, content):
         '''
         observe a character at the position.

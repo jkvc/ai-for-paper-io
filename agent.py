@@ -1,16 +1,18 @@
 import curses
 import arena
-from direction import Direction, opposite
+from direction import Direction, opposite, move
 from observation import Observation
 import random
+import minimax
+from pprint import pformat
 
 
 class Agent:
     def __init__(self, char):
         self.char = char
-        self.memory = Observation(0)
+        self.is_god = False
 
-    def get_move(self, observation):
+    def get_move(self, observable):
         raise NotImplementedError()
 
     @staticmethod
@@ -27,7 +29,7 @@ class StationaryAgent(Agent):
         super().__init__(char)
         self.go_up = False
 
-    def get_move(self, observation):
+    def get_move(self, observable):
         self.go_up = not self.go_up
         return Direction.UP if self.go_up else Direction.DOWN
 
@@ -36,12 +38,16 @@ class RandomAgent(Agent):
     def __init__(self, char):
         super().__init__(char)
 
-    def get_move(self, observation):
+    def get_move(self, observable):
         possible_dir = []
+        self_pos = observable.agent_pos[self.char]
+
         for direction in Direction.ALL_DIRS:
-            if observation.content[direction] not in \
-                    [Agent.get_trail_char(self.char), arena.Arena.WALL_CHAR]:
+            newpos = move(self_pos, direction)
+            if observable.is_within_bounds(*newpos) and\
+                    newpos not in observable.agent_trails[self.char]:
                 possible_dir.append(direction)
+
         if len(possible_dir) == 0:
             return Direction.UP
         return random.choice(possible_dir)
@@ -50,62 +56,43 @@ class RandomAgent(Agent):
 class HumanAgent(Agent):
     def __init__(self, char):
         super().__init__(char)
-        self.game_oracle = None
 
-    def get_move(self, observation):
-        self.memory.update_memory(observation)
+    def get_move(self, observable):
+        observation_str = str(observable)
+        print(observation_str)
 
-        screen = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        screen.keypad(True)
-        screen.clear()
+        agent_list = []
+        for ch in observable.agent_pos:
+            if ch != self.char:
+                agent_list.append(ch)
+        agent_list.append(self.char)
 
-        # add stuff to the screen
-        vertical_offset = 0
+        for direction in Direction.ALL_DIRS:
+            print(Direction.tostring(direction))
 
-        if self.game_oracle != None:
-            oracle_str = str(self.game_oracle)
-            screen.addstr(vertical_offset, 0, oracle_str)
-            vertical_offset += oracle_str.count('\n') + 1
+            arena_copy = observable.get_full_arena_copy()
+            arena_copy.move_agent(self.char, direction)
+            factors = minimax.minimax(
+                agent_list, 0,
+                arena_copy, minimax.eval_naive_builder,
+                1
+            )
 
-        else:
-            screen.addstr(vertical_offset, 0, 'Memory')
-            vertical_offset += 1
+            factors_str = pformat(factors, 2)
+            print(factors_str)
 
-            memory_str = self.memory.to_string_full()
-            screen.addstr(vertical_offset, 0, memory_str)
-            vertical_offset += memory_str.count('\n') + 1
+        print('Use arrow keys to move... ')
 
-        screen.addstr(
-            vertical_offset, 0,
-            f"Observation of agent {self.char}: ")
-        vertical_offset += 2
-
-        observation_str = str(observation)
-        screen.addstr(vertical_offset, 0, observation_str)
-        vertical_offset += observation_str.count('\n') + 1
-
-        screen.addstr(vertical_offset, 0, 'Use arrow keys to move... ')
-
-        # ask for direction input
         direction = None
-        try:
-            while direction == None:
-                ch = screen.getch()
-                if ch == curses.KEY_UP:
-                    direction = Direction.UP
-                if ch == curses.KEY_DOWN:
-                    direction = Direction.DOWN
-                if ch == curses.KEY_LEFT:
-                    direction = Direction.LEFT
-                if ch == curses.KEY_RIGHT:
-                    direction = Direction.RIGHT
-        finally:
-            curses.nocbreak()
-            screen.keypad(0)
-            curses.echo()
-            curses.endwin()
+        while direction == None:
+            ch = input()
+            if ch == 'w':
+                direction = Direction.UP
+            if ch == 's':
+                direction = Direction.DOWN
+            if ch == 'a':
+                direction = Direction.LEFT
+            if ch == 'd':
+                direction = Direction.RIGHT
 
-        self.memory.shift(*opposite(direction))
         return direction

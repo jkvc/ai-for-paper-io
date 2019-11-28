@@ -14,6 +14,7 @@ class Arena:
         self.agent_pos = {}
         self.agent_territory = {}
         self.agent_trails = {}
+        self.dead_agents = set()
 
     def add_agent(self, agent_char, pos,
                   init_territory_radius=INITIAL_TERRITORY_RADIUS):
@@ -94,6 +95,9 @@ class Arena:
                 if self.agent_pos[other_agent_char] in new_territory:
                     agents_to_kill.add(other_agent_char)
 
+        for dead_agent in agents_to_kill:
+            self.dead_agents.add(dead_agent)
+
         return agents_to_kill
 
     def complete_enclosure_if_any(self, agent_char):
@@ -168,6 +172,9 @@ class Arena:
 
         return new_territory
 
+    def is_within_bounds(self, row, col):
+        return row >= 0 and row < self.height and col >= 0 and col < self.width
+
     def _get_trail_char(self, agent_char):
         return agent_char.lower() + '*'
 
@@ -185,16 +192,45 @@ class Arena:
                 return Agent.get_territory_char(agent_char)
         return ' '
 
-    def get_observation(self, agent, radius):
+    def get_arena_copy(self, min_row, max_row, min_col, max_col, agent_char=None):
+        def is_in_range(row, col):
+            return row >= min_row and row <= max_row and col >= min_col and col <= max_col
+
+        arena_copy = Arena(self.height, self.width)
+
+        for agent_ch in self.agent_pos:
+            row, col = self.agent_pos[agent_ch]
+            arena_copy.agent_pos[agent_ch] = (
+                row, col) if is_in_range(row, col) else None
+
+            arena_copy.agent_territory[agent_ch] = set()
+            arena_copy.agent_trails[agent_ch] = set()
+
+            for row, col in self.agent_territory[agent_ch]:
+                if is_in_range(row, col) or agent_ch == agent_char:
+                    arena_copy.agent_territory[agent_ch].add((row, col))
+
+            for row, col in self.agent_trails[agent_ch]:
+                if is_in_range(row, col) or agent_ch == agent_char:
+                    arena_copy.agent_trails[agent_ch].add((row, col))
+
+        return arena_copy
+
+    def get_full_arena_copy(self):
+        return self.get_arena_copy(
+            0, self.height-1, 0, self.width-1
+        )
+
+    def get_observable_arena(self, agent, radius):
         '''
         - return an observation of the agent, of observation radius
         '''
 
         if agent not in self.agent_pos:
             print(
-                f'[WARN] Arena.get_observation: agent {agent} not in arena. Returning empty observation.'
+                f'[WARN] Arena.get_observable_arena: agent {agent} not in arena. Returning None.'
             )
-            return Observation(0)
+            return None
 
         agentpos = self.agent_pos[agent]
         agent_row, agent_col = agentpos
@@ -202,12 +238,8 @@ class Arena:
         maxrow = agent_row + radius
         mincol = agent_col - radius
         maxcol = agent_col + radius
-        observation = Observation(radius)
 
-        for row in range(minrow, maxrow + 1):
-            for col in range(mincol, maxcol + 1):
-                observation.add(agentpos, (row, col), self._get_char(row, col))
-        return observation
+        return self.get_arena_copy(minrow, maxrow, mincol, maxcol, agent_char=agent)
 
     def get_territory_size(self, agent_ch):
         return len(self.agent_territory[agent_ch])
@@ -245,8 +277,3 @@ if __name__ == "__main__":
     arena.agent_trails['A'].add((1, 2))
 
     print(arena)
-
-    print(arena.get_observation('A', 2))
-    print(arena.get_observation('B', 2))
-    print(arena.get_observation('N', 6))
-    print(arena.get_observation('C', 2))
