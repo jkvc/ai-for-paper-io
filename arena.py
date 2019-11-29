@@ -7,7 +7,7 @@ MIN_AGENT = 1
 
 
 class Arena:
-    # WALL_CHAR = 'X'
+    WALL_CHAR = 'X'
     INITIAL_TERRITORY_RADIUS = 1
 
     def __init__(self, height, width, max_ticks):
@@ -19,8 +19,7 @@ class Arena:
         self.pos = [None, None]
         self.trail = [set(), set()]
         self.territory = [set(), set()]
-        # self.curr_agent = random.choice([MAX_AGENT, MIN_AGENT])
-        self.curr_agent = MAX_AGENT
+        self.curr_agent = random.choice([MAX_AGENT, MIN_AGENT])
 
         self.winner = None
         self.remaining_ticks = max_ticks
@@ -63,11 +62,11 @@ class Arena:
         - return a list of agents that died as a result of this move
         '''
         self.remaining_ticks -= 1
-        if self.remaining_ticks == 0:
-            self.winner =\
-                MAX_AGENT \
-                if len(self.territory[MAX_AGENT]) > len(self.territory[MIN_AGENT])\
-                else MIN_AGENT
+        # if self.remaining_ticks == 0:
+        #     self.winner =\
+        #         MAX_AGENT \
+        #         if len(self.territory[MAX_AGENT]) > len(self.territory[MIN_AGENT])\
+        #         else MIN_AGENT
 
         if agent != self.curr_agent:
             print(
@@ -86,10 +85,6 @@ class Arena:
 
         # if we step on own trail, lose
         if newpos in self.trail[agent]:
-            self.win(other_agent)
-            return
-        # if we go out of bounds, lose
-        if not self.is_within_bounds(*newpos):
             self.win(other_agent)
             return
 
@@ -190,6 +185,29 @@ class Arena:
         char = self.agent[agent].char
         return title + ':' + char
 
+    def _get_char(self, row, col):
+        if row < 0 or col < 0 or row >= self.height or col >= self.width:
+            return Arena.WALL_CHAR
+
+        pos = (row, col)
+
+        if pos == self.pos[MAX_AGENT]:
+            return self.agent[MAX_AGENT].char
+        if pos == self.pos[MIN_AGENT]:
+            return self.agent[MIN_AGENT].char
+
+        if pos in self.trail[MAX_AGENT]:
+            return agent.Agent.get_trail_char(self.agent[MAX_AGENT].char)
+        if pos in self.trail[MIN_AGENT]:
+            return agent.Agent.get_trail_char(self.agent[MIN_AGENT].char)
+
+        if pos in self.territory[MAX_AGENT]:
+            return agent.Agent.get_territory_char(self.agent[MAX_AGENT].char)
+        if pos in self.territory[MIN_AGENT]:
+            return agent.Agent.get_territory_char(self.agent[MIN_AGENT].char)
+
+        return ' '
+
     def get_arena_copy(self, min_row, max_row, min_col, max_col, agent):
         def is_in_range(row, col):
             return row >= min_row and row <= max_row and col >= min_col and col <= max_col
@@ -205,7 +223,7 @@ class Arena:
         arena_copy.territory[agent] = set(list(self.territory[agent]))
 
         other_agent = self.other_agent(agent)
-        if self.pos[other_agent] != None and is_in_range(*self.pos[other_agent]):
+        if is_in_range(*self.pos[other_agent]):
             arena_copy.pos[other_agent] = self.pos[other_agent]
         for row, col in self.territory[other_agent]:
             if is_in_range(row, col):
@@ -242,30 +260,23 @@ class Arena:
         return len(self.territory[agent])
 
     def is_end(self):
+        return self.is_elimination() or self.remaining_ticks <= 0
+
+    def is_elimination(self):
         return self.winner != None
 
-    def _get_char(self, row, col):
-        # if row < 0 or col < 0 or row >= self.height or col >= self.width:
-        #     return Arena.WALL_CHAR
+    def utility(self):
+        if not self.is_end():
+            print('[WARN] Arena.utility called not is_end')
 
-        pos = (row, col)
+        if self.is_elimination():
+            arena_area = self.width * self.height
+            return arena_area if self.winner == MAX_AGENT else -arena_area
 
-        if pos == self.pos[MAX_AGENT]:
-            return f'[{self.agent[MAX_AGENT].char}]'
-        if pos == self.pos[MIN_AGENT]:
-            return f'[{self.agent[MIN_AGENT].char}]'
+        return len(self.territory[MAX_AGENT]) - len(self.territory[MIN_AGENT])
 
-        if pos in self.trail[MAX_AGENT]:
-            return f'.{self.agent[MAX_AGENT].char.lower()}.'
-        if pos in self.trail[MIN_AGENT]:
-            return f'.{self.agent[MIN_AGENT].char.lower()}.'
-
-        if pos in self.territory[MAX_AGENT]:
-            return f' {self.agent[MAX_AGENT].char.lower()} '
-        if pos in self.territory[MIN_AGENT]:
-            return f' {self.agent[MIN_AGENT].char.lower()} '
-
-        return '   '
+    def _get_trail_char(self, agent_char):
+        return agent_char.lower() + '*'
 
     def __str__(self):
         strlist = []
@@ -273,7 +284,7 @@ class Arena:
         def get_horizontal_border():
             l = ['   ']
             for col in range(self.width):
-                l.append(str(col).rjust(3, '0'))
+                l.append(str(col).rjust(2, '0'))
                 l.append(' ')
             return ''.join(l) + '\n'
 
@@ -299,9 +310,9 @@ class Arena:
 
 
 if __name__ == "__main__":
-    arena = Arena(20, 20, max_ticks=100)
-    arena.add_agent(agent.RandomAgent('O', MAX_AGENT), MAX_AGENT, (1, 1))
-    arena.add_agent(agent.RandomAgent('X', MIN_AGENT), MIN_AGENT, (8, 8))
+    arena = Arena(20, 20)
+    arena.add_agent(agent.RandomAgent('A'), MAX_AGENT, (1, 1))
+    arena.add_agent(agent.RandomAgent('B'), MIN_AGENT, (8, 8))
 
     print(arena)
 

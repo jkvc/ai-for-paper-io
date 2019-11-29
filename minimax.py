@@ -4,16 +4,16 @@ from pprint import pprint
 import random
 
 
-def arena_end_utility(a):
-    if a.winner == None:
-        print('[WARN] arena_end_utility called not is_end')
-        return 0
-    elif a.winner == arena.MAX_AGENT:
-        return float('inf')
-    elif a.winner == arena.MIN_AGENT:
-        return float('-inf')
+# def arena_end_utility(a):
+#     if a.winner == None:
+#         print('[WARN] arena_end_utility called not is_end')
+#         return 0
+#     elif a.winner == arena.MAX_AGENT:
+#         return float('inf')
+#     elif a.winner == arena.MIN_AGENT:
+#         return float('-inf')
 
-    return None
+#     return None
 
 
 def arena_bfs(arena, start_pos, to_find, to_go_around):
@@ -83,57 +83,13 @@ def eval_builder(a, agent):
     return features
 
 
-def conservative_builder_max(a, depth, eval_func, trail_cap):
-    if depth <= 0:
-        return eval_func(a, a.curr_agent)
-
-    directions = a.get_valid_move_dirs(a.curr_agent)
-    if len(directions) == 0:
-        return {
-            'value': float('-inf' if a.curr_agent == arena.MAX_AGENT else 'inf')
-        }
-
-    values = []
-    results = []
-    for direction in directions:
-        succ = a.get_full_arena_copy()
-        succ.move_agent(succ.curr_agent, direction)
-        succ.curr_agent = a.curr_agent
-
-        if len(succ.trail[a.curr_agent]) >= trail_cap:
-            continue
-
-        result = conservative_builder_max(succ, depth-1, eval_func, trail_cap)
-        result['dir'] = direction
-        result['dir_str'] = Direction.tostring(direction)
-        results.append(result)
-        values.append(result['value'])
-
-    if len(values) == 0:
-        return eval_func(a, a.curr_agent)
-
-    optimal_val = max(values) \
-        if a.curr_agent == arena.MAX_AGENT \
-        else min(values)
-    results_of_choice = []
-    for i in range(len(values)):
-        if values[i] == optimal_val:
-            results_of_choice.append(results[i])
-
-    return random.choice(results_of_choice)
-
-
-def minimax(a, depth, eval_func, imperfect_fallback, alpha=float('-inf'), beta=float('inf')):
+def minimax(a, depth, eval_func, alpha=float('-inf'), beta=float('inf')):
     if a.is_end():
         return {
-            'value': arena_end_utility(a)
+            'value': a.utility()
         }
-    if depth <= 0:
+    if depth == 0:
         return eval_func(a, a.curr_agent)
-
-    other_agent = a.other_agent(a.curr_agent)
-    if a.pos[other_agent] == None:
-        return imperfect_fallback(a, depth, eval_func)
 
     directions = a.get_valid_move_dirs(a.curr_agent)
     if len(directions) == 0:
@@ -143,6 +99,7 @@ def minimax(a, depth, eval_func, imperfect_fallback, alpha=float('-inf'), beta=f
 
     minimax_values = []
     minimax_results = []
+    minimax_dirs = []
     for direction in directions:
         succ = a.get_full_arena_copy()
         succ.move_agent(succ.curr_agent, direction)
