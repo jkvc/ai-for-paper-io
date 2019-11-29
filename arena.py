@@ -159,6 +159,11 @@ class Arena:
     def _get_trail_char(self, agent_char):
         return agent_char.lower() + '*'
 
+    def agent_str(self, agent):
+        title = 'MAX_AGENT' if self.curr_agent == MAX_AGENT else 'MIN_AGENT'
+        char = self.agent[agent].char
+        return title + ':' + char
+
     def _get_char(self, row, col):
         if row < 0 or col < 0 or row >= self.height or col >= self.width:
             return Arena.WALL_CHAR
@@ -197,6 +202,8 @@ class Arena:
         arena_copy.territory[agent] = set(list(self.territory[agent]))
 
         other_agent = self.other_agent(agent)
+        if is_in_range(*self.pos[other_agent]):
+            arena_copy.pos[other_agent] = self.pos[other_agent]
         for row, col in self.territory[other_agent]:
             if is_in_range(row, col):
                 arena_copy.territory[other_agent].add((row, col))

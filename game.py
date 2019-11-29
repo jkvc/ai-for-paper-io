@@ -18,54 +18,35 @@ class Game:
         self.max_ticks = max_ticks
         self.vision_radius = vision_radius
 
-    def add_agent(self, agent, pos, init_territory_radius=Arena.INITIAL_TERRITORY_RADIUS):
+    def add_agent(self, agent_obj, agent, pos, init_territory_radius=Arena.INITIAL_TERRITORY_RADIUS):
         '''
         add an agent to the game, add its pos to the arena
         '''
-        self.agents[agent.char] = agent
-        self.arena.add_agent(
-            agent.char, pos, init_territory_radius=init_territory_radius)
+        self.arena.add_agent(agent_obj, agent, pos, init_territory_radius)
 
     def run(self):
         '''
         dev only, write a real game runner for production
         '''
 
-        while not self.game_decided:
+        while self.arena.winner == None and self.tick < self.max_ticks:
+            print(self.arena)
             self.tick += 1
 
-            agents_to_kill = set()
+            curr_agent = self.arena.curr_agent
+            print(self.arena.agent_str(curr_agent), 'moving...')
 
-            for agent_ch in self.agents:
-                agent = self.agents[agent_ch]
+            direction = self.arena.agent[curr_agent].get_move(
+                self.arena.get_observable_arena(
+                    curr_agent, self.vision_radius),
+                curr_agent
+            )
+            print(self.arena.agent_str(curr_agent),
+                  'moves', Direction.tostring(direction))
 
-                if agent.is_god:
-                    observable = self.arena.get_full_arena_copy()
-                else:
-                    observable = self.arena.get_observable_arena(
-                        agent_ch, self.vision_radius
-                    )
+            self.arena.move_agent(curr_agent, direction)
 
-                move_dir = agent.get_move(observable)
-                to_kill = self.arena.move_agent(agent_ch, move_dir)
-
-                agents_to_kill = agents_to_kill.union(to_kill)
-
-            for agent_char in agents_to_kill:
-                del self.agents[agent_char]
-                self.arena.remove_agent(agent_char)
-
-            if len(self.agents) <= 1:
-                self.game_decided = True
-                break
-
-            if self.tick >= self.max_ticks:
-                break
-
-        print(self)
-        if self.game_decided:
-            for agent_ch in self.agents:
-                print('Winner', agent_ch)
+        print(self.arena)
 
     def __str__(self):
         s = ''
@@ -77,15 +58,14 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(25, 25, vision_radius=5)
+    game = Game(15, 15, vision_radius=5)
 
-    a = RandomAgent('S')
-    game.add_agent(a, (16, 16), init_territory_radius=1)
+    a = RandomAgent('R')
+    game.add_agent(a, arena.MIN_AGENT, (10, 10), init_territory_radius=1)
 
     human_agent = HumanAgent('H')
-    human_agent.is_god = True
-    game.add_agent(human_agent, (3, 3), init_territory_radius=2)
+    human_agent.is_god = False
+    game.add_agent(human_agent, arena.MAX_AGENT,
+                   (3, 3), init_territory_radius=2)
 
-    print(game)
-    # print(game.arena.get_territory_size('H'))
     game.run()

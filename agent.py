@@ -12,7 +12,7 @@ class Agent:
         self.char = char
         self.is_god = False
 
-    def get_move(self, observable):
+    def get_move(self, observable, self_agent_type):
         raise NotImplementedError()
 
     @staticmethod
@@ -38,14 +38,14 @@ class RandomAgent(Agent):
     def __init__(self, char):
         super().__init__(char)
 
-    def get_move(self, observable):
+    def get_move(self, observable, self_agent_type):
         possible_dir = []
-        self_pos = observable.agent_pos[self.char]
+        self_pos = observable.pos[self_agent_type]
 
         for direction in Direction.ALL_DIRS:
             newpos = move(self_pos, direction)
             if observable.is_within_bounds(*newpos) and\
-                    newpos not in observable.agent_trails[self.char]:
+                    newpos not in observable.trail[self_agent_type]:
                 possible_dir.append(direction)
 
         if len(possible_dir) == 0:
@@ -57,29 +57,29 @@ class HumanAgent(Agent):
     def __init__(self, char):
         super().__init__(char)
 
-    def get_move(self, observable):
+    def get_move(self, observable, self_agent_type):
         observation_str = str(observable)
         print(observation_str)
 
-        agent_list = []
-        for ch in observable.agent_pos:
-            if ch != self.char:
-                agent_list.append(ch)
-        agent_list.append(self.char)
+        # agent_list = []
+        # for ch in observable.agent_pos:
+        #     if ch != self.char:
+        #         agent_list.append(ch)
+        # agent_list.append(self.char)
 
-        for direction in Direction.ALL_DIRS:
-            # print(Direction.tostring(direction))
+        # for direction in Direction.ALL_DIRS:
+        #     # print(Direction.tostring(direction))
 
-            arena_copy = observable.get_full_arena_copy()
-            arena_copy.move_agent(self.char, direction)
-            factors = minimax.minimax(
-                agent_list, 0,
-                arena_copy, minimax.eval_naive_builder,
-                1
-            )
+        #     arena_copy = observable.get_full_arena_copy()
+        #     arena_copy.move_agent(self.char, direction)
+        #     factors = minimax.minimax(
+        #         agent_list, 0,
+        #         arena_copy, minimax.eval_naive_builder,
+        #         1
+        #     )
 
-            factors_str = pformat(factors, 2)
-            # print(factors_str)
+        # factors_str = pformat(factors, 2)
+        # print(factors_str)
 
         print('Use arrow keys to move... ')
 
