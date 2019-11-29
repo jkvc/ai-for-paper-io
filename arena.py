@@ -19,7 +19,7 @@ class Arena:
         self.pos = [None, None]
         self.trail = [set(), set()]
         self.territory = [set(), set()]
-        self.curr_agent = random.choice([MAX_AGENT, MIN_AGENT])
+        self.curr_agent = MIN_AGENT
 
         self.winner = None
         self.remaining_ticks = max_ticks
@@ -85,6 +85,10 @@ class Arena:
 
         # if we step on own trail, lose
         if newpos in self.trail[agent]:
+            self.win(other_agent)
+            return
+        # if we go out of bounds, lose
+        if not self.is_within_bounds(*newpos):
             self.win(other_agent)
             return
 
@@ -275,8 +279,28 @@ class Arena:
 
         return len(self.territory[MAX_AGENT]) - len(self.territory[MIN_AGENT])
 
-    def _get_trail_char(self, agent_char):
-        return agent_char.lower() + '*'
+    def _get_char(self, row, col):
+        # if row < 0 or col < 0 or row >= self.height or col >= self.width:
+        #     return Arena.WALL_CHAR
+
+        pos = (row, col)
+
+        if pos == self.pos[MAX_AGENT]:
+            return f'[{self.agent[MAX_AGENT].char}]'
+        if pos == self.pos[MIN_AGENT]:
+            return f'[{self.agent[MIN_AGENT].char}]'
+
+        if pos in self.trail[MAX_AGENT]:
+            return f'.{self.agent[MAX_AGENT].char.lower()}.'
+        if pos in self.trail[MIN_AGENT]:
+            return f'.{self.agent[MIN_AGENT].char.lower()}.'
+
+        if pos in self.territory[MAX_AGENT]:
+            return f' {self.agent[MAX_AGENT].char.lower()} '
+        if pos in self.territory[MIN_AGENT]:
+            return f' {self.agent[MIN_AGENT].char.lower()} '
+
+        return '   '
 
     def __str__(self):
         strlist = []
@@ -284,7 +308,7 @@ class Arena:
         def get_horizontal_border():
             l = ['   ']
             for col in range(self.width):
-                l.append(str(col).rjust(2, '0'))
+                l.append(str(col).rjust(3, '0'))
                 l.append(' ')
             return ''.join(l) + '\n'
 

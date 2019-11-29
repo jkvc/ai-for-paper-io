@@ -1,7 +1,7 @@
 from arena import Arena
 from agent import *
 from direction import *
-# from observation import Observation
+import mini_expecti_max
 
 
 class Game:
@@ -57,20 +57,31 @@ if __name__ == "__main__":
 
     end_util = []
 
-    for i in range(10):
+    for i in range(50):
 
-        game = Game(7, 7, max_ticks=50, vision_radius=3)
-        max_agent = MinimaxAgent('X', arena.MAX_AGENT, minimax.eval_builder)
-        max_agent.is_god = True
+        game = Game(6, 6, max_ticks=70, vision_radius=10)
+        max_agent = ExpectimaxAgent(
+            'X',
+            arena.MAX_AGENT,
+            mini_expecti_max.eval_pure_builder,
+            4
+        )
         game.add_agent(max_agent, arena.MAX_AGENT,
                        (1, 1), init_territory_radius=1)
 
-        min_agent = MinimaxAgent('O', arena.MIN_AGENT, minimax.eval_builder)
-        min_agent.is_god = True
+        # min_agent = MinimaxAgent(
+        #     'O',
+        #     arena.MIN_AGENT,
+        #     mini_expecti_max.eval_pure_builder,
+        #     6
+        # )
+        # min_agent = StationaryAgent('O', arena.MIN_AGENT)
+        min_agent = RandomAgent('O', arena.MIN_AGENT)
         game.add_agent(min_agent, arena.MIN_AGENT,
-                       (5, 5), init_territory_radius=1)
+                       (4, 4), init_territory_radius=1)
 
         game.run()
         end_util.append(game.arena.utility())
 
     print(end_util)
+    print(sum(end_util) / len(end_util))

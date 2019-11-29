@@ -3,7 +3,7 @@ import arena
 from direction import Direction, opposite, move
 from observation import Observation
 import random
-import minimax
+import mini_expecti_max
 from pprint import pprint
 
 
@@ -15,14 +15,6 @@ class Agent:
 
     def get_move(self, observable):
         raise NotImplementedError()
-
-    @staticmethod
-    def get_trail_char(agent_char):
-        return agent_char.lower() + '*'
-
-    @staticmethod
-    def get_territory_char(agent_char):
-        return agent_char.lower()
 
 
 class StationaryAgent(Agent):
@@ -55,12 +47,23 @@ class RandomAgent(Agent):
 
 
 class MinimaxAgent(Agent):
-    def __init__(self, char, agent_type, eval_func):
+    def __init__(self, char, agent_type, eval_func, depth):
         super().__init__(char, agent_type)
         self.eval_func = eval_func
+        self.depth = depth
 
     def get_move(self, observable):
-        return minimax.minimax(observable, 8, self.eval_func)['dir']
+        return mini_expecti_max.minimax(observable, self.depth, self.eval_func)['dir']
+
+
+class ExpectimaxAgent(Agent):
+    def __init__(self, char, agent_type, eval_func, depth):
+        super().__init__(char, agent_type)
+        self.eval_func = eval_func
+        self.depth = depth
+
+    def get_move(self, observable):
+        return mini_expecti_max.expectimax(observable, self.depth, self.eval_func)['dir']
 
 
 class HumanAgent(Agent):
@@ -72,7 +75,7 @@ class HumanAgent(Agent):
         observation_str = str(observable)
         print(observation_str)
         print('minimax state')
-        pprint(minimax.minimax(observable, 6, self.eval_func))
+        pprint(mini_expecti_max.minimax(observable, 6, self.eval_func))
 
         direction = None
         while direction == None:
