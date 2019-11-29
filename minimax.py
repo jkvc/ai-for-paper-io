@@ -73,11 +73,9 @@ def eval_naive_builder(agent_char, arena):
 
     if agent_char in arena.dead_agents:
         factors['value'] = float('-inf')
-        print('returning negative inf')
         return factors
     if len(arena.agent_pos) - len(arena.dead_agents) <= 1 and \
             agent_char not in arena.dead_agents:
-        print(agent_char)
         factors['value'] = float('inf')
         return factors
 
@@ -93,7 +91,6 @@ def minimax(agents, curr_agent_idx, arena, eval_func, depth):
 
     values = {}
     for direction in Direction.ALL_DIRS:
-        print(Direction.tostring(direction))
 
         arena_copy = arena.get_full_arena_copy()
         arena_copy.move_agent(curr_agent, direction)
@@ -105,8 +102,6 @@ def minimax(agents, curr_agent_idx, arena, eval_func, depth):
             agents, next_agent_idx, arena_copy, eval_func, new_depth
         )
         values[direction] = result
-        print(result)
-        print(arena.dead_agents)
 
     is_max_agent = curr_agent_idx == len(agents)-1
     if is_max_agent:

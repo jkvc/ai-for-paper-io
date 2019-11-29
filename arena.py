@@ -1,6 +1,9 @@
-from agent import Agent
+import agent
 from direction import *
-from observation import Observation
+# from observation import Observation
+
+MAX_AGENT = 0
+MIN_AGENT = 1
 
 
 class Arena:
@@ -11,12 +14,16 @@ class Arena:
         super().__init__()
         self.width = width
         self.height = height
-        self.agent_pos = {}
-        self.agent_territory = {}
-        self.agent_trails = {}
-        self.dead_agents = set()
 
-    def add_agent(self, agent_char, pos,
+        self.agent = [None, None]
+        self.pos = [None, None]
+        self.trail = [set(), set()]
+        self.territory = [set(), set()]
+        self.curr_agent = MAX_AGENT
+
+        self.winner = None
+
+    def add_agent(self, agent_obj, agent, pos,
                   init_territory_radius=INITIAL_TERRITORY_RADIUS):
         '''
         - add an agent to the arena,
@@ -25,82 +32,56 @@ class Arena:
         - pos: initial position of the agent
         '''
 
-        if agent_char in self.agent_pos:
-            print(
-                f'[WARN] Arena.add_agent: {agent_char} already exists in arena, overwriting.'
-            )
-        self.agent_trails[agent_char] = set()
+        self.pos[agent] = pos
+        self.agent[agent] = agent_obj
 
-        # populate initial territory around new agent
-        self.agent_territory[agent_char] = set()
         agent_row, agent_col = pos
         for row in range(agent_row-init_territory_radius, agent_row+init_territory_radius+1):
             for col in range(agent_col-init_territory_radius, agent_col+init_territory_radius+1):
-                self.agent_territory[agent_char].add((row, col))
+                self.territory[agent].add((row, col))
 
-        # add its position
-        self.update_agent_pos(agent_char, pos)
+    def other_agent(self, agent):
+        return (agent + 1) % 2
 
-    def update_agent_pos(self, agent_char, newpos):
-        '''
-        - update agent to a new position
-        - if agent does not exist, add it
-        '''
-
-        if newpos[0] >= self.height or newpos[1] >= self.width:
-            print(
-                f'[WARN] Arena:update_gent_pos: newpos {newpos} is out of arena of shape {(self.height, self.width)}')
-        self.agent_pos[agent_char] = newpos
-
-    def remove_agent(self, agent_char):
-        '''
-        - remove an agent from the arena
-        - this should be called when an agent is killed
-        '''
-        del self.agent_pos[agent_char]
-        del self.agent_territory[agent_char]
-        del self.agent_trails[agent_char]
-
-    def move_agent(self, agent_char, direction):
+    def move_agent(self, agent, direction):
         '''
         - move agent to a new position
         - if enclosure completed, trail -> territory, any enclosed territory flooded
         - return a list of agents that died as a result of this move
         '''
+        if agent != self.curr_agent:
+            print(
+                '[WARN] Arena.move_agent, moving agent is not consistent with self.curr_agent')
+        self.curr_agent = self.other_agent(agent)
 
-        oldpos = self.agent_pos[agent_char]
+        oldpos = self.pos[agent]
         newpos = move(oldpos, direction)
-        if oldpos not in self.agent_territory[agent_char]:
-            self.agent_trails[agent_char].add(oldpos)
-        self.update_agent_pos(agent_char, newpos)
+        if oldpos not in self.territory[agent]:
+            self.trail[agent].add(oldpos)
 
-        new_territory = self.complete_enclosure_if_any(agent_char)
+        self.pos[agent] = newpos
+
+        new_territory = self.complete_enclosure_if_any(agent)
+        other_agent = self.other_agent(agent)
 
         # remove territory from other agents
         if len(new_territory) != 0:
-            for other_agent_char in self.agent_territory:
-                if other_agent_char == agent_char:
-                    continue
-                self.agent_territory[other_agent_char] =\
-                    self.agent_territory[other_agent_char].difference(
-                        new_territory)
+            self.territory[other_agent] =\
+                self.territory[other_agent].difference(new_territory)
 
-        agents_to_kill = set()
-        for other_agent_char in self.agent_territory:
-            # kill an agent by stepping on their trail, you can get yourself killed
-            if newpos in self.agent_trails[other_agent_char]:
-                agents_to_kill.add(other_agent_char)
-            # kill an agent by encircling it
-            if other_agent_char != agent_char:
-                if self.agent_pos[other_agent_char] in new_territory:
-                    agents_to_kill.add(other_agent_char)
+        # if we step on the other agents trail, win
+        if newpos in self.trail[other_agent]:
+            self.win(agent)
+            return
+        # if we enclose other agent completely, win
+        if self.pos[other_agent] in new_territory:
+            self.win(agent)
+            return
 
-        for dead_agent in agents_to_kill:
-            self.dead_agents.add(dead_agent)
+    def win(self, agent):
+        self.winner = agent
 
-        return agents_to_kill
-
-    def complete_enclosure_if_any(self, agent_char):
+    def complete_enclosure_if_any(self, agent):
         '''
         - iterate over empty spaces
         - if space in an enclosed territory of `agent_char`, flood it to become the agents 
@@ -109,18 +90,18 @@ class Arena:
         '''
 
         # if enclosure not completed, no new territory
-        if self.agent_pos[agent_char] not in self.agent_territory[agent_char] \
-                or len(self.agent_trails[agent_char]) == 0:
+        if self.pos[agent] not in self.territory[agent] \
+                or len(self.trail[agent]) == 0:
             return set()
 
         new_territory = set()
 
         # trail becomes territory
-        new_territory = new_territory.union(self.agent_trails[agent_char])
-        self.agent_territory[agent_char] =\
-            self.agent_territory[agent_char].union(
-                self.agent_trails[agent_char])
-        self.agent_trails[agent_char] = set()
+        new_territory = new_territory.union(self.trail[agent])
+        self.territory[agent] =\
+            self.territory[agent].union(
+                self.trail[agent])
+        self.trail[agent] = set()
 
         def flood(row, col):
             '''
@@ -142,7 +123,7 @@ class Arena:
                 if row < 0 or col < 0 or row >= self.height or col >= self.width:
                     leaked = True
                     continue
-                if (row, col) in self.agent_territory[agent_char]:
+                if (row, col) in self.territory[agent]:
                     continue
 
                 to_fill.add((row, col))
@@ -167,8 +148,8 @@ class Arena:
                 explored = explored.union(to_fill)
                 if not leaked:
                     new_territory = new_territory.union(to_fill)
-                    self.agent_territory[agent_char] = \
-                        self.agent_territory[agent_char].union(to_fill)
+                    self.territory[agent] = \
+                        self.territory[agent].union(to_fill)
 
         return new_territory
 
@@ -181,44 +162,53 @@ class Arena:
     def _get_char(self, row, col):
         if row < 0 or col < 0 or row >= self.height or col >= self.width:
             return Arena.WALL_CHAR
-        for agent_char in self.agent_pos:
-            if (row, col) == self.agent_pos[agent_char]:
-                return agent_char
-        for agent_char in self.agent_pos:
-            if (row, col) in self.agent_trails[agent_char]:
-                return Agent.get_trail_char(agent_char)
-        for agent_char in self.agent_pos:
-            if (row, col) in self.agent_territory[agent_char]:
-                return Agent.get_territory_char(agent_char)
+
+        pos = (row, col)
+
+        if pos == self.pos[MAX_AGENT]:
+            return self.agent[MAX_AGENT].char
+        if pos == self.pos[MIN_AGENT]:
+            return self.agent[MIN_AGENT].char
+
+        if pos in self.trail[MAX_AGENT]:
+            return agent.Agent.get_trail_char(self.agent[MAX_AGENT].char)
+        if pos in self.trail[MIN_AGENT]:
+            return agent.Agent.get_trail_char(self.agent[MIN_AGENT].char)
+
+        if pos in self.territory[MAX_AGENT]:
+            return agent.Agent.get_territory_char(self.agent[MAX_AGENT].char)
+        if pos in self.territory[MIN_AGENT]:
+            return agent.Agent.get_territory_char(self.agent[MIN_AGENT].char)
+
         return ' '
 
-    def get_arena_copy(self, min_row, max_row, min_col, max_col, agent_char=None):
+    def get_arena_copy(self, min_row, max_row, min_col, max_col, agent):
         def is_in_range(row, col):
             return row >= min_row and row <= max_row and col >= min_col and col <= max_col
 
         arena_copy = Arena(self.height, self.width)
 
-        for agent_ch in self.agent_pos:
-            row, col = self.agent_pos[agent_ch]
-            arena_copy.agent_pos[agent_ch] = (
-                row, col) if is_in_range(row, col) else None
+        arena_copy.curr_agent = self.curr_agent
+        arena_copy.winner = self.winner
+        arena_copy.agent = [*self.agent]
 
-            arena_copy.agent_territory[agent_ch] = set()
-            arena_copy.agent_trails[agent_ch] = set()
+        arena_copy.pos[agent] = self.pos[agent]
+        arena_copy.trail[agent] = set(list(self.trail[agent]))
+        arena_copy.territory[agent] = set(list(self.territory[agent]))
 
-            for row, col in self.agent_territory[agent_ch]:
-                if is_in_range(row, col) or agent_ch == agent_char:
-                    arena_copy.agent_territory[agent_ch].add((row, col))
-
-            for row, col in self.agent_trails[agent_ch]:
-                if is_in_range(row, col) or agent_ch == agent_char:
-                    arena_copy.agent_trails[agent_ch].add((row, col))
+        other_agent = self.other_agent(agent)
+        for row, col in self.territory[other_agent]:
+            if is_in_range(row, col):
+                arena_copy.territory[other_agent].add((row, col))
+        for row, col in self.trail[other_agent]:
+            if is_in_range(row, col):
+                arena_copy.trail[other_agent].add((row, col))
 
         return arena_copy
 
     def get_full_arena_copy(self):
         return self.get_arena_copy(
-            0, self.height-1, 0, self.width-1
+            0, self.height-1, 0, self.width-1, MAX_AGENT
         )
 
     def get_observable_arena(self, agent, radius):
@@ -226,23 +216,17 @@ class Arena:
         - return an observation of the agent, of observation radius
         '''
 
-        if agent not in self.agent_pos:
-            print(
-                f'[WARN] Arena.get_observable_arena: agent {agent} not in arena. Returning None.'
-            )
-            return None
-
-        agentpos = self.agent_pos[agent]
+        agentpos = self.pos[agent]
         agent_row, agent_col = agentpos
         minrow = agent_row - radius
         maxrow = agent_row + radius
         mincol = agent_col - radius
         maxcol = agent_col + radius
 
-        return self.get_arena_copy(minrow, maxrow, mincol, maxcol, agent_char=agent)
+        return self.get_arena_copy(minrow, maxrow, mincol, maxcol, agent)
 
-    def get_territory_size(self, agent_ch):
-        return len(self.agent_territory[agent_ch])
+    def get_territory_size(self, agent):
+        return len(self.territory[agent])
 
     def __str__(self):
         strlist = []
@@ -264,16 +248,25 @@ class Arena:
             strlist.append(f' {str(row).rjust(2, "0")}\n')
         strlist.append(get_horizontal_border())
 
+        strlist.append(
+            f'curr_agent: {"MAX_AGENT" if self.curr_agent == MAX_AGENT else "MIN_AGENT"} \n')
+        strlist.append(
+            f'winner: {self.winner} \n')
+
         return ''.join(strlist)
 
 
 if __name__ == "__main__":
     arena = Arena(20, 20)
-    arena.add_agent('A', (1, 1))
-    arena.add_agent('B', (8, 8))
-    arena.add_agent('N', (5, 5))
-
-    arena.update_agent_pos('B', (19, 19))
-    arena.agent_trails['A'].add((1, 2))
+    arena.add_agent(agent.RandomAgent('A'), MAX_AGENT, (1, 1))
+    arena.add_agent(agent.RandomAgent('B'), MIN_AGENT, (8, 8))
 
     print(arena)
+
+    c = arena.get_full_arena_copy()
+    print(c)
+
+    o = arena.get_observable_arena(MAX_AGENT, 3)
+    print(o)
+    o = arena.get_observable_arena(MIN_AGENT, 10)
+    print(o)

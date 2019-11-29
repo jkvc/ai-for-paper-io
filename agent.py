@@ -68,7 +68,7 @@ class HumanAgent(Agent):
         agent_list.append(self.char)
 
         for direction in Direction.ALL_DIRS:
-            print(Direction.tostring(direction))
+            # print(Direction.tostring(direction))
 
             arena_copy = observable.get_full_arena_copy()
             arena_copy.move_agent(self.char, direction)
@@ -79,7 +79,7 @@ class HumanAgent(Agent):
             )
 
             factors_str = pformat(factors, 2)
-            print(factors_str)
+            # print(factors_str)
 
         print('Use arrow keys to move... ')
 

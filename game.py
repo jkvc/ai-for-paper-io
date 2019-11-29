@@ -1,7 +1,7 @@
 from arena import Arena
 from agent import *
 from direction import *
-from observation import Observation
+# from observation import Observation
 
 
 class Game:
@@ -13,11 +13,9 @@ class Game:
         max_ticks=DEFAULT_MAX_TICKS,
         vision_radius=DEFAULT_VISION_RADIUS
     ):
-        self.agents = {}
         self.arena = Arena(height, width)
         self.tick = 0
         self.max_ticks = max_ticks
-        self.game_decided = False
         self.vision_radius = vision_radius
 
     def add_agent(self, agent, pos, init_territory_radius=Arena.INITIAL_TERRITORY_RADIUS):
