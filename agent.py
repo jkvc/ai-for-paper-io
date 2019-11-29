@@ -16,14 +16,6 @@ class Agent:
     def get_move(self, observable):
         raise NotImplementedError()
 
-    @staticmethod
-    def get_trail_char(agent_char):
-        return agent_char.lower() + '*'
-
-    @staticmethod
-    def get_territory_char(agent_char):
-        return agent_char.lower()
-
 
 class StationaryAgent(Agent):
     def __init__(self, char, agent_type):
@@ -55,12 +47,20 @@ class RandomAgent(Agent):
 
 
 class MinimaxAgent(Agent):
-    def __init__(self, char, agent_type, eval_func):
+    def __init__(self, char, agent_type, eval_func, fallback_func):
         super().__init__(char, agent_type)
         self.eval_func = eval_func
+        self.fallback_func = fallback_func
 
     def get_move(self, observable):
-        return minimax.minimax(observable, 10, self.eval_func)['dir']
+        result = minimax.minimax(
+            observable, 8, self.eval_func, self.fallback_func)
+        if 'dir' not in result:
+            directions = observable.get_valid_move_dirs(self.agent_type)
+            if len(directions) == 0:
+                directions = Direction.ALL_DIRS
+            return random.choice(directions)
+        return result['dir']
 
 
 class HumanAgent(Agent):
@@ -70,9 +70,14 @@ class HumanAgent(Agent):
     def get_move(self, observable):
         observation_str = str(observable)
         print(observation_str)
-        pprint(minimax.arena_features(observable, self.agent_type))
         print('minimax state')
-        pprint(minimax.minimax(observable, 6))
+        pprint(minimax.minimax(
+            observable, 8,
+            minimax.eval_builder,
+            lambda a, depth, eval_func:
+                minimax.conservative_builder_max(
+                    a, depth, eval_func, trail_cap=4)
+        ))
 
         direction = None
         while direction == None:

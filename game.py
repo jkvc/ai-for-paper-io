@@ -54,15 +54,27 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(7, 7, max_ticks=50, vision_radius=3)
+    game = Game(10, 10, max_ticks=100, vision_radius=3)
 
-    max_agent = MinimaxAgent('H', arena.MAX_AGENT, minimax.eval_builder)
-    max_agent.is_god = True
+    max_agent = MinimaxAgent(
+        'O',
+        arena.MAX_AGENT,
+        minimax.eval_builder,
+        lambda a, depth, eval_func:
+            minimax.conservative_builder_max(a, depth, eval_func, trail_cap=4)
+    )
+    # max_agent.is_god = True
     game.add_agent(max_agent, arena.MAX_AGENT,
                    (1, 1), init_territory_radius=1)
 
-    min_agent = MinimaxAgent('R', arena.MIN_AGENT, minimax.eval_builder)
-    min_agent.is_god = True
-    game.add_agent(min_agent, arena.MIN_AGENT, (5, 5), init_territory_radius=1)
+    min_agent = MinimaxAgent(
+        'X',
+        arena.MIN_AGENT,
+        minimax.eval_builder,
+        lambda a, depth, eval_func:
+            minimax.conservative_builder_max(a, depth, eval_func, trail_cap=4)
+    )
+    # min_agent.is_god = True
+    game.add_agent(min_agent, arena.MIN_AGENT, (8, 8), init_territory_radius=1)
 
     game.run()
