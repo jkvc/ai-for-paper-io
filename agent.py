@@ -4,7 +4,7 @@ from direction import Direction, opposite, move
 from observation import Observation
 import random
 import minimax
-from pprint import pformat
+from pprint import pprint
 
 
 class Agent:
@@ -54,6 +54,15 @@ class RandomAgent(Agent):
         return random.choice(possible_dir)
 
 
+class MinimaxAgent(Agent):
+    def __init__(self, char, agent_type, eval_func):
+        super().__init__(char, agent_type)
+        self.eval_func = eval_func
+
+    def get_move(self, observable):
+        return minimax.minimax(observable, 10, self.eval_func)['dir']
+
+
 class HumanAgent(Agent):
     def __init__(self, char, agent_type):
         super().__init__(char, agent_type)
@@ -61,28 +70,9 @@ class HumanAgent(Agent):
     def get_move(self, observable):
         observation_str = str(observable)
         print(observation_str)
-
-        # agent_list = []
-        # for ch in observable.agent_pos:
-        #     if ch != self.char:
-        #         agent_list.append(ch)
-        # agent_list.append(self.char)
-
-        # for direction in Direction.ALL_DIRS:
-        #     # print(Direction.tostring(direction))
-
-        #     arena_copy = observable.get_full_arena_copy()
-        #     arena_copy.move_agent(self.char, direction)
-        #     factors = minimax.minimax(
-        #         agent_list, 0,
-        #         arena_copy, minimax.eval_naive_builder,
-        #         1
-        #     )
-
-        # factors_str = pformat(factors, 2)
-        # print(factors_str)
-
-        print('Use arrow keys to move... ')
+        pprint(minimax.arena_features(observable, self.agent_type))
+        print('minimax state')
+        pprint(minimax.minimax(observable, 6))
 
         direction = None
         while direction == None:

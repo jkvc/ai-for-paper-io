@@ -1,6 +1,6 @@
 import agent
 from direction import *
-# from observation import Observation
+import random
 
 MAX_AGENT = 0
 MIN_AGENT = 1
@@ -10,7 +10,7 @@ class Arena:
     WALL_CHAR = 'X'
     INITIAL_TERRITORY_RADIUS = 1
 
-    def __init__(self, height, width):
+    def __init__(self, height, width, max_ticks):
         super().__init__()
         self.width = width
         self.height = height
@@ -19,9 +19,10 @@ class Arena:
         self.pos = [None, None]
         self.trail = [set(), set()]
         self.territory = [set(), set()]
-        self.curr_agent = MAX_AGENT
+        self.curr_agent = random.choice([MAX_AGENT, MIN_AGENT])
 
         self.winner = None
+        self.remaining_ticks = max_ticks
 
     def add_agent(self, agent_obj, agent, pos,
                   init_territory_radius=INITIAL_TERRITORY_RADIUS):
@@ -43,12 +44,30 @@ class Arena:
     def other_agent(self, agent):
         return (agent + 1) % 2
 
+    def get_valid_move_dirs(self, agent):
+        valid_dirs = []
+        for direction in Direction.ALL_DIRS:
+            newpos = move(self.pos[agent], direction)
+            if not self.is_within_bounds(*newpos):
+                continue
+            if newpos in self.trail[agent]:
+                continue
+            valid_dirs.append(direction)
+        return valid_dirs
+
     def move_agent(self, agent, direction):
         '''
         - move agent to a new position
         - if enclosure completed, trail -> territory, any enclosed territory flooded
         - return a list of agents that died as a result of this move
         '''
+        self.remaining_ticks -= 1
+        if self.remaining_ticks == 0:
+            self.winner =\
+                MAX_AGENT \
+                if len(self.territory[MAX_AGENT]) > len(self.territory[MIN_AGENT])\
+                else MIN_AGENT
+
         if agent != self.curr_agent:
             print(
                 '[WARN] Arena.move_agent, moving agent is not consistent with self.curr_agent')
@@ -196,7 +215,7 @@ class Arena:
         def is_in_range(row, col):
             return row >= min_row and row <= max_row and col >= min_col and col <= max_col
 
-        arena_copy = Arena(self.height, self.width)
+        arena_copy = Arena(self.height, self.width, self.remaining_ticks)
 
         arena_copy.curr_agent = self.curr_agent
         arena_copy.winner = self.winner
@@ -270,6 +289,9 @@ class Arena:
             f'curr_agent: {"MAX_AGENT" if self.curr_agent == MAX_AGENT else "MIN_AGENT"} \n')
         strlist.append(
             f'winner: {self.agent_str(self.winner) if self.winner != None else "None"} \n')
+        strlist.append(
+            f'remaining_ticks: {self.remaining_ticks}'
+        )
 
         return ''.join(strlist)
 

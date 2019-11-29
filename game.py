@@ -13,9 +13,7 @@ class Game:
         max_ticks=DEFAULT_MAX_TICKS,
         vision_radius=DEFAULT_VISION_RADIUS
     ):
-        self.arena = Arena(height, width)
-        self.tick = 0
-        self.max_ticks = max_ticks
+        self.arena = Arena(height, width, max_ticks)
         self.vision_radius = vision_radius
 
     def add_agent(self, agent_obj, agent, pos, init_territory_radius=Arena.INITIAL_TERRITORY_RADIUS):
@@ -29,9 +27,8 @@ class Game:
         dev only, write a real game runner for production
         '''
 
-        while self.arena.winner == None and self.tick < self.max_ticks:
+        while self.arena.winner == None:
             print(self.arena)
-            self.tick += 1
 
             curr_agent = self.arena.curr_agent
             print(self.arena.agent_str(curr_agent), 'moving...')
@@ -57,14 +54,15 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game(15, 15, vision_radius=5)
+    game = Game(7, 7, max_ticks=50, vision_radius=3)
 
-    a = RandomAgent('R', arena.MIN_AGENT)
-    game.add_agent(a, arena.MIN_AGENT, (10, 10), init_territory_radius=1)
+    max_agent = MinimaxAgent('H', arena.MAX_AGENT, minimax.eval_builder)
+    max_agent.is_god = True
+    game.add_agent(max_agent, arena.MAX_AGENT,
+                   (1, 1), init_territory_radius=1)
 
-    human_agent = HumanAgent('H', arena.MAX_AGENT)
-    human_agent.is_god = True
-    game.add_agent(human_agent, arena.MAX_AGENT,
-                   (3, 3), init_territory_radius=2)
+    min_agent = MinimaxAgent('R', arena.MIN_AGENT, minimax.eval_builder)
+    min_agent.is_god = True
+    game.add_agent(min_agent, arena.MIN_AGENT, (5, 5), init_territory_radius=1)
 
     game.run()

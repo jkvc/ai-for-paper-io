@@ -1,9 +1,22 @@
 import arena
 from direction import Direction, move
 from pprint import pprint
+import random
 
 
-def min_dist(arena, start_pos, to_find, to_go_around):
+def arena_end_utility(a):
+    if a.winner == None:
+        print('[WARN] arena_end_utility called not is_end')
+        return 0
+    elif a.winner == arena.MAX_AGENT:
+        return float('inf')
+    elif a.winner == arena.MIN_AGENT:
+        return float('-inf')
+
+    return None
+
+
+def arena_bfs(arena, start_pos, to_find, to_go_around):
     touched = set()
     queue = [(start_pos, 0)]
     while queue:
@@ -30,93 +43,88 @@ def min_dist(arena, start_pos, to_find, to_go_around):
     return None
 
 
-def evaluation_factors(agent_char, arena):
-    own_pos = arena.agent_pos[agent_char]
-    own_territory_pos = arena.agent_territory[agent_char]
-    own_trail_pos = arena.agent_trails[agent_char]
-
-    adversary_trail_pos = set()
-    for ch in arena.agent_trails:
-        if ch == agent_char:
-            continue
-        for pos in arena.agent_trails[ch]:
-            adversary_trail_pos.add(pos)
-
-    adversary_to_own_trail_dist = None
-    for adversary in arena.agent_pos:
-        if adversary == agent_char:
-            continue
-        dist = min_dist(
-            arena, arena.agent_pos[adversary],
-            own_trail_pos, arena.agent_trails[adversary]
-        )
-        if adversary_to_own_trail_dist == None or dist < adversary_to_own_trail_dist:
-            adversary_to_own_trail_dist = dist
+def arena_features(arena, agent):
+    start_pos = arena.pos[agent]
+    other_agent = arena.other_agent(agent)
 
     result = {
-        'dist_to_own_territory': min_dist(
-            arena, own_pos, own_territory_pos, own_trail_pos
-        ),
-        'dist_to_adversary_trail': min_dist(
-            arena, own_pos, adversary_trail_pos, own_trail_pos
-        ),
-        'dist_adversary_to_own_trail': adversary_to_own_trail_dist,
-        'territory_size': arena.get_territory_size(agent_char),
-        'own_trail_length': len(own_trail_pos),
+        # 'dist_to_own_territory': arena_bfs(
+        #     arena,
+        #     start_pos,
+        #     arena.territory[agent],
+        #     arena.trail[agent]
+        # ),
+        # 'dist_to_adversary_trail': arena_bfs(
+        #     arena,
+        #     start_pos,
+        #     arena.trail[other_agent],
+        #     arena.trail[agent]
+        # ),
+        # 'adversary_dist_to_own_trail': arena_bfs(
+        #     arena,
+        #     arena.pos[other_agent],
+        #     arena.trail[agent],
+        #     arena.trail[other_agent],
+        # ),
+        'territory_size': arena.get_territory_size(agent),
+        'own_trail_length': len(arena.trail[agent]),
     }
 
     return result
 
 
-def eval_naive_builder(agent_char, arena):
-    factors = evaluation_factors(agent_char, arena)
+def eval_builder(a, agent):
+    features = arena_features(a, agent)
+    features['value'] = features['territory_size']
 
-    if agent_char in arena.dead_agents:
-        factors['value'] = float('-inf')
-        return factors
-    if len(arena.agent_pos) - len(arena.dead_agents) <= 1 and \
-            agent_char not in arena.dead_agents:
-        factors['value'] = float('inf')
-        return factors
+    if agent == arena.MIN_AGENT:
+        features['value'] *= -1
 
-    factors['value'] = factors['territory_size']
-
-    return factors
+    return features
 
 
-def minimax(agents, curr_agent_idx, arena, eval_func, depth):
+def minimax(a, depth, eval_func, alpha=float('-inf'), beta=float('inf')):
+    if a.is_end():
+        return {
+            'value': arena_end_utility(a)
+        }
     if depth == 0:
-        return eval_func(agents[-1], arena)
-    curr_agent = agents[curr_agent_idx]
+        return eval_func(a, a.curr_agent)
 
-    values = {}
-    for direction in Direction.ALL_DIRS:
+    directions = a.get_valid_move_dirs(a.curr_agent)
+    if len(directions) == 0:
+        return {
+            'value': float('-inf' if a.curr_agent == arena.MAX_AGENT else 'inf')
+        }
 
-        arena_copy = arena.get_full_arena_copy()
-        arena_copy.move_agent(curr_agent, direction)
+    minimax_values = []
+    minimax_results = []
+    minimax_dirs = []
+    for direction in directions:
+        succ = a.get_full_arena_copy()
+        succ.move_agent(succ.curr_agent, direction)
 
-        next_agent_idx = (curr_agent_idx + 1) % len(agents)
-        new_depth = depth-1 if next_agent_idx == len(agents)-1 else depth
+        results = minimax(succ, depth-1, eval_func, alpha, beta)
+        results['dir'] = direction
+        results['dir_str'] = Direction.tostring(direction)
+        minimax_results.append(results)
+        minimax_values.append(results['value'])
 
-        result = minimax(
-            agents, next_agent_idx, arena_copy, eval_func, new_depth
-        )
-        values[direction] = result
+        if a.curr_agent == arena.MAX_AGENT:
+            if results['value'] > beta:
+                return {'value': float('inf')}
+            alpha = max(alpha, results['value'])
+        elif a.curr_agent == arena.MIN_AGENT:
+            if results['value'] < alpha:
+                return {'value': float('-inf')}
+            beta = min(beta, results['value'])
 
-    is_max_agent = curr_agent_idx == len(agents)-1
-    if is_max_agent:
-        opt_value = float('-inf')
-        opt_result = None
-        for direction in Direction.ALL_DIRS:
-            if values[direction]['value'] > opt_value:
-                opt_value = values[direction]['value']
-                opt_result = values[direction]
-        return opt_result
-    else:
-        opt_value = float('inf')
-        opt_result = None
-        for direction in Direction.ALL_DIRS:
-            if values[direction]['value'] < opt_value:
-                opt_value = values[direction]['value']
-                opt_result = values[direction]
-        return opt_result
+    optimal_val = max(minimax_values) \
+        if a.curr_agent == arena.MAX_AGENT \
+        else min(minimax_values)
+    results_of_choice = []
+    for i in range(len(minimax_values)):
+        if minimax_values[i] == optimal_val:
+            results_of_choice.append(minimax_results[i])
+
+    return random.choice(results_of_choice)
