@@ -8,11 +8,12 @@ from pprint import pformat
 
 
 class Agent:
-    def __init__(self, char):
+    def __init__(self, char, agent_type):
         self.char = char
         self.is_god = False
+        self.agent_type = agent_type
 
-    def get_move(self, observable, self_agent_type):
+    def get_move(self, observable):
         raise NotImplementedError()
 
     @staticmethod
@@ -25,8 +26,8 @@ class Agent:
 
 
 class StationaryAgent(Agent):
-    def __init__(self, char):
-        super().__init__(char)
+    def __init__(self, char, agent_type):
+        super().__init__(char, agent_type)
         self.go_up = False
 
     def get_move(self, observable):
@@ -35,17 +36,17 @@ class StationaryAgent(Agent):
 
 
 class RandomAgent(Agent):
-    def __init__(self, char):
-        super().__init__(char)
+    def __init__(self, char, agent_type):
+        super().__init__(char, agent_type)
 
-    def get_move(self, observable, self_agent_type):
+    def get_move(self, observable):
         possible_dir = []
-        self_pos = observable.pos[self_agent_type]
+        self_pos = observable.pos[self.agent_type]
 
         for direction in Direction.ALL_DIRS:
             newpos = move(self_pos, direction)
             if observable.is_within_bounds(*newpos) and\
-                    newpos not in observable.trail[self_agent_type]:
+                    newpos not in observable.trail[self.agent_type]:
                 possible_dir.append(direction)
 
         if len(possible_dir) == 0:
@@ -54,10 +55,10 @@ class RandomAgent(Agent):
 
 
 class HumanAgent(Agent):
-    def __init__(self, char):
-        super().__init__(char)
+    def __init__(self, char, agent_type):
+        super().__init__(char, agent_type)
 
-    def get_move(self, observable, self_agent_type):
+    def get_move(self, observable):
         observation_str = str(observable)
         print(observation_str)
 

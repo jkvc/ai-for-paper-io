@@ -38,8 +38,7 @@ class Game:
 
             direction = self.arena.agent[curr_agent].get_move(
                 self.arena.get_observable_arena(
-                    curr_agent, self.vision_radius),
-                curr_agent
+                    curr_agent, self.vision_radius)
             )
             print(self.arena.agent_str(curr_agent),
                   'moves', Direction.tostring(direction))
@@ -60,11 +59,11 @@ class Game:
 if __name__ == "__main__":
     game = Game(15, 15, vision_radius=5)
 
-    a = RandomAgent('R')
+    a = RandomAgent('R', arena.MIN_AGENT)
     game.add_agent(a, arena.MIN_AGENT, (10, 10), init_territory_radius=1)
 
-    human_agent = HumanAgent('H')
-    human_agent.is_god = False
+    human_agent = HumanAgent('H', arena.MAX_AGENT)
+    human_agent.is_god = True
     game.add_agent(human_agent, arena.MAX_AGENT,
                    (3, 3), init_territory_radius=2)
 

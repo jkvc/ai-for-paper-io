@@ -64,6 +64,11 @@ class Arena:
         new_territory = self.complete_enclosure_if_any(agent)
         other_agent = self.other_agent(agent)
 
+        # if we step on own trail, lose
+        if newpos in self.trail[agent]:
+            self.win(other_agent)
+            return
+
         # remove territory from other agents
         if len(new_territory) != 0:
             self.territory[other_agent] =\
@@ -160,7 +165,7 @@ class Arena:
         return agent_char.lower() + '*'
 
     def agent_str(self, agent):
-        title = 'MAX_AGENT' if self.curr_agent == MAX_AGENT else 'MIN_AGENT'
+        title = 'MAX_AGENT' if agent == MAX_AGENT else 'MIN_AGENT'
         char = self.agent[agent].char
         return title + ':' + char
 
@@ -223,6 +228,9 @@ class Arena:
         - return an observation of the agent, of observation radius
         '''
 
+        if self.agent[agent].is_god:
+            return self.get_full_arena_copy()
+
         agentpos = self.pos[agent]
         agent_row, agent_col = agentpos
         minrow = agent_row - radius
@@ -234,6 +242,9 @@ class Arena:
 
     def get_territory_size(self, agent):
         return len(self.territory[agent])
+
+    def is_end(self):
+        return self.winner != None
 
     def __str__(self):
         strlist = []
@@ -258,7 +269,7 @@ class Arena:
         strlist.append(
             f'curr_agent: {"MAX_AGENT" if self.curr_agent == MAX_AGENT else "MIN_AGENT"} \n')
         strlist.append(
-            f'winner: {self.winner} \n')
+            f'winner: {self.agent_str(self.winner) if self.winner != None else "None"} \n')
 
         return ''.join(strlist)
 
