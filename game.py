@@ -57,26 +57,26 @@ if __name__ == "__main__":
 
     end_util = []
 
-    for i in range(50):
+    for i in range(10):
 
         game = Game(6, 6, max_ticks=70, vision_radius=10)
-        max_agent = ExpectimaxAgent(
+        max_agent = MinimaxAgent(
             'X',
             arena.MAX_AGENT,
-            mini_expecti_max.eval_pure_builder,
-            4
+            mini_expecti_max.eval_builder_with_safeness,
+            6
         )
         game.add_agent(max_agent, arena.MAX_AGENT,
                        (1, 1), init_territory_radius=1)
 
-        # min_agent = MinimaxAgent(
-        #     'O',
-        #     arena.MIN_AGENT,
-        #     mini_expecti_max.eval_pure_builder,
-        #     6
-        # )
+        min_agent = ExpectimaxAgent(
+            'O',
+            arena.MIN_AGENT,
+            mini_expecti_max.eval_pure_builder,
+            6
+        )
         # min_agent = StationaryAgent('O', arena.MIN_AGENT)
-        min_agent = RandomAgent('O', arena.MIN_AGENT)
+        # min_agent = RandomAgent('O', arena.MIN_AGENT)
         game.add_agent(min_agent, arena.MIN_AGENT,
                        (4, 4), init_territory_radius=1)
 

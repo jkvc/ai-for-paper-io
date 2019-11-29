@@ -19,7 +19,7 @@ class Arena:
         self.pos = [None, None]
         self.trail = [set(), set()]
         self.territory = [set(), set()]
-        self.curr_agent = MIN_AGENT
+        self.curr_agent = random.choice([MIN_AGENT, MAX_AGENT])
 
         self.winner = None
         self.remaining_ticks = max_ticks
