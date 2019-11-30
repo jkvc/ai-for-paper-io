@@ -1,7 +1,7 @@
-from arena import Arena
 from agent import *
 from direction import *
 import mini_expecti_max
+import arena
 
 
 class Game:
@@ -13,36 +13,57 @@ class Game:
         max_ticks=DEFAULT_MAX_TICKS,
         vision_radius=DEFAULT_VISION_RADIUS
     ):
-        self.arena = Arena(height, width, max_ticks)
+        self.arena = arena.Arena(height, width, max_ticks)
         self.vision_radius = vision_radius
+        self.is_initialized = False
+        self.history = []
 
-    def add_agent(self, agent_obj, agent, pos, init_territory_radius=Arena.INITIAL_TERRITORY_RADIUS):
+    def initialize(self):
+        for agent in [arena.MIN_AGENT, arena.MAX_AGENT]:
+            agent_obj = self.arena.agent[agent]
+            agent_obj.initialize_memory(self.arena)
+        self.is_initialized = True
+
+    def add_agent(self, agent_obj, agent, pos,
+                  init_territory_radius):
         '''
         add an agent to the game, add its pos to the arena
         '''
         self.arena.add_agent(agent_obj, agent, pos, init_territory_radius)
 
-    def run(self):
+    def run(self, quiet=False):
         '''
         dev only, write a real game runner for production
         '''
 
+        if not self.is_initialized:
+            self.initialize()
+
         while not self.arena.is_end():
-            print(self.arena)
+            self.history.append(self.arena.get_full_arena_copy())
+
+            if not quiet:
+                print('\n[God view]')
+                print(self.arena)
 
             curr_agent = self.arena.curr_agent
-            print(self.arena.agent_str(curr_agent), 'moving...')
+            if not quiet:
+                print('>', self.arena.agent_str(curr_agent), 'moving...')
 
             direction = self.arena.agent[curr_agent].get_move(
                 self.arena.get_observable_arena(
                     curr_agent, self.vision_radius)
             )
-            print(self.arena.agent_str(curr_agent),
-                  'moves', Direction.tostring(direction))
+            if not quiet:
+                print('>', self.arena.agent_str(curr_agent),
+                      'moves', Direction.tostring(direction))
 
             self.arena.move_agent(curr_agent, direction)
 
-        print(self.arena)
+        self.history.append(self.arena.get_full_arena_copy())
+        if not quiet:
+            print(self.arena)
+            print(self.arena.utility())
 
     def __str__(self):
         s = ''
@@ -55,25 +76,23 @@ class Game:
 
 if __name__ == "__main__":
 
-    end_util = []
+    outcomes = []
 
-    for i in range(10):
+    for i in range(1):
 
-        game = Game(6, 6, max_ticks=70, vision_radius=10)
-        max_agent = MinimaxAgent(
+        game = Game(6, 6, max_ticks=70, vision_radius=2)
+        max_agent = HumanAgent(
             'X',
             arena.MAX_AGENT,
-            mini_expecti_max.eval_builder_with_safeness,
-            6
         )
         game.add_agent(max_agent, arena.MAX_AGENT,
                        (1, 1), init_territory_radius=1)
 
-        min_agent = ExpectimaxAgent(
+        min_agent = MinimaxAgent(
             'O',
             arena.MIN_AGENT,
             mini_expecti_max.eval_pure_builder,
-            6
+            4
         )
         # min_agent = StationaryAgent('O', arena.MIN_AGENT)
         # min_agent = RandomAgent('O', arena.MIN_AGENT)
@@ -81,7 +100,7 @@ if __name__ == "__main__":
                        (4, 4), init_territory_radius=1)
 
         game.run()
-        end_util.append(game.arena.utility())
+        outcomes.append(game.arena.utility())
 
-    print(end_util)
-    print(sum(end_util) / len(end_util))
+    print(outcomes)
+    print('expected outcome', sum(outcomes) / len(outcomes))

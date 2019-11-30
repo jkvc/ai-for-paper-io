@@ -5,6 +5,7 @@ from observation import Observation
 import random
 import mini_expecti_max
 from pprint import pprint
+import td_learn
 
 
 class Agent:
@@ -12,6 +13,30 @@ class Agent:
         self.char = char
         self.is_god = False
         self.agent_type = agent_type
+        self.memory = None
+
+    def initialize_memory(self, a):
+        self.memory = a.get_full_arena_copy()
+
+    def update_memory_from_observation(self, observation):
+        adversary_agent = observation.other_agent(self.agent_type)
+
+        self.memory.winner = observation.winner
+        self.memory.remaining_ticks = observation.remaining_ticks
+        self.memory.curr_agent = observation.curr_agent
+
+        self.memory.pos[self.agent_type] = observation.pos[self.agent_type]
+        if observation.pos[adversary_agent] != None:
+            self.memory.pos[adversary_agent] = observation.pos[adversary_agent]
+
+        # copy trail and territory
+        self.memory.trail[self.agent_type] = \
+            set(list(observation.trail[self.agent_type]))
+        self.memory.territory[self.agent_type] = \
+            set(list(observation.territory[self.agent_type]))
+
+        self.memory.trail[adversary_agent] = \
+            set(list(observation.trail[adversary_agent]))
 
     def get_move(self, observable):
         raise NotImplementedError()
@@ -46,36 +71,45 @@ class RandomAgent(Agent):
         return random.choice(possible_dir)
 
 
-class MinimaxAgent(Agent):
+class DepthSearchAgent(Agent):
     def __init__(self, char, agent_type, eval_func, depth):
         super().__init__(char, agent_type)
         self.eval_func = eval_func
         self.depth = depth
 
+
+class MinimaxAgent(DepthSearchAgent):
     def get_move(self, observable):
-        return mini_expecti_max.minimax(observable, self.depth, self.eval_func)['dir']
+        self.update_memory_from_observation(observable)
+        result = mini_expecti_max.minimax(
+            self.memory, self.depth, self.eval_func)
+        if 'dir' not in result:
+            return Direction.UP
+        return result['dir']
 
 
-class ExpectimaxAgent(Agent):
-    def __init__(self, char, agent_type, eval_func, depth):
-        super().__init__(char, agent_type)
-        self.eval_func = eval_func
-        self.depth = depth
-
+class ExpectimaxAgent(DepthSearchAgent):
     def get_move(self, observable):
-        return mini_expecti_max.expectimax(observable, self.depth, self.eval_func)['dir']
+        self.update_memory_from_observation(observable)
+        result = mini_expecti_max.expectimax(
+            self.memory, self.depth, self.eval_func)
+        if 'dir' not in result:
+            return Direction.UP
+        return result['dir']
 
 
 class HumanAgent(Agent):
-    def __init__(self, char, agent_type, eval_func):
-        super().__init__(char, agent_type)
-        self.eval_func = eval_func
-
     def get_move(self, observable):
-        observation_str = str(observable)
-        print(observation_str)
-        print('minimax state')
-        pprint(mini_expecti_max.minimax(observable, 6, self.eval_func))
+        self.update_memory_from_observation(observable)
+        print('\n[Human agent memory]')
+        print(str(self.memory))
+        print('[Human agent observation]')
+        print(str(observable))
+
+        # print('minimax state')
+        # pprint(mini_expecti_max.minimax(self.memory, 6, self.eval_func))
+        print('[td_feature]')
+        pprint(td_learn.feature_extractor(self.memory))
 
         direction = None
         while direction == None:
@@ -89,4 +123,17 @@ class HumanAgent(Agent):
             if ch == 'd':
                 direction = Direction.RIGHT
 
+        return direction
+
+
+class TDAgent(Agent):
+    def __init__(self, char, agent_type, w, feature_extractor):
+        super().__init__(char, agent_type)
+        self.w = w
+        self.feature_extractor = feature_extractor
+
+    def get_move(self, observable):
+        self.update_memory_from_observation(observable)
+        v, direction = td_learn.get_max_value_dir(
+            self.memory, self.w, self.feature_extractor)
         return direction

@@ -4,11 +4,11 @@ import random
 
 MAX_AGENT = 0
 MIN_AGENT = 1
+INITIAL_TERRITORY_RADIUS = 1
 
 
 class Arena:
     WALL_CHAR = 'X'
-    INITIAL_TERRITORY_RADIUS = 1
 
     def __init__(self, height, width, max_ticks):
         super().__init__()
@@ -188,29 +188,6 @@ class Arena:
         title = 'MAX_AGENT' if agent == MAX_AGENT else 'MIN_AGENT'
         char = self.agent[agent].char
         return title + ':' + char
-
-    def _get_char(self, row, col):
-        if row < 0 or col < 0 or row >= self.height or col >= self.width:
-            return Arena.WALL_CHAR
-
-        pos = (row, col)
-
-        if pos == self.pos[MAX_AGENT]:
-            return self.agent[MAX_AGENT].char
-        if pos == self.pos[MIN_AGENT]:
-            return self.agent[MIN_AGENT].char
-
-        if pos in self.trail[MAX_AGENT]:
-            return agent.Agent.get_trail_char(self.agent[MAX_AGENT].char)
-        if pos in self.trail[MIN_AGENT]:
-            return agent.Agent.get_trail_char(self.agent[MIN_AGENT].char)
-
-        if pos in self.territory[MAX_AGENT]:
-            return agent.Agent.get_territory_char(self.agent[MAX_AGENT].char)
-        if pos in self.territory[MIN_AGENT]:
-            return agent.Agent.get_territory_char(self.agent[MIN_AGENT].char)
-
-        return ' '
 
     def get_arena_copy(self, min_row, max_row, min_col, max_col, agent):
         def is_in_range(row, col):
