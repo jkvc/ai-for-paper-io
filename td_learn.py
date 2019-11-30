@@ -9,11 +9,11 @@ import json
 import os
 
 
-# EXPLORE_EPSILON = 0.05
-# LEARNING_RATE = 0.001
+EXPLORE_EPSILON = 0.05
+LEARNING_RATE = 0.001
 
-EXPLORE_EPSILON = 0
-LEARNING_RATE = 0
+# EXPLORE_EPSILON = 0
+# LEARNING_RATE = 0
 
 GAMMA = 0.6
 
@@ -175,12 +175,12 @@ def simulate_one_game(w, opponent, opponent_pos, feature_extractor):
     return (max_agent_history, g.history[-1].utility())
 
 
-FILENAME = 'td_arena_66_vision_1_minimax_2'
+FILENAME = 'td_arena_66_vision_1_minimax_4'
 WEIGHT_FILENAME = FILENAME+'.json'
 OUTCOME_RECORD_FILENAME = FILENAME+'.outcome.json'
 FEATURE_EXTRACTOR = dist_features
 
-NUM_EPISODE = 100
+NUM_EPISODE = 20000
 
 if __name__ == "__main__":
     if os.path.exists(WEIGHT_FILENAME):
@@ -204,7 +204,7 @@ if __name__ == "__main__":
                 'O',
                 arena.MIN_AGENT,
                 mini_expecti_max.eval_pure_builder,
-                2
+                4
             ),
             (4, 4),
             FEATURE_EXTRACTOR
