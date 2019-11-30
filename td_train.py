@@ -16,10 +16,10 @@ EVAL_FUNC = mini_expecti_max.eval_pure_builder
 
 FILENAME = 'td_minimax_2_pure_god_view'
 DEFAULT_MAX_POS = (1, 1)
-ARENA_SIZE = (5, 5)
+ARENA_SIZE = (6, 6)
 DEFAULT_MIN_POS = (ARENA_SIZE[0]-2, ARENA_SIZE[1]-2)
 VISION_RADIUS = 10
-MAX_TICKS = 40
+MAX_TICKS = 50
 
 DIRNAME = 'td_train_output'
 WEIGHT_FILENAME = os.path.join(DIRNAME, FILENAME+'.json')
