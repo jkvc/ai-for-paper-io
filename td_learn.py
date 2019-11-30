@@ -9,9 +9,13 @@ import json
 import os
 
 
+# EXPLORE_EPSILON = 0.05
+# LEARNING_RATE = 0.001
+
 EXPLORE_EPSILON = 0
-LEARNING_RATE = 0.001
-GAMMA = 0.7
+LEARNING_RATE = 0
+
+GAMMA = 0.6
 
 
 def dot(v, w):
@@ -171,13 +175,17 @@ def simulate_one_game(w, opponent, opponent_pos, feature_extractor):
     return (max_agent_history, g.history[-1].utility())
 
 
-FILENAME = 'td_weights.json'
+FILENAME = 'td_arena_66_vision_1_minimax_2'
+WEIGHT_FILENAME = FILENAME+'.json'
+OUTCOME_RECORD_FILENAME = FILENAME+'.outcome.json'
 FEATURE_EXTRACTOR = dist_features
 
+NUM_EPISODE = 100
+
 if __name__ == "__main__":
-    if os.path.exists(FILENAME):
-        with open(FILENAME) as f:
-            print(f'Loading weights from {FILENAME}')
+    if os.path.exists(WEIGHT_FILENAME):
+        with open(WEIGHT_FILENAME) as f:
+            print(f'Loading weights from {WEIGHT_FILENAME}')
             w = json.load(f)
     else:
         print(f'Init new weights')
@@ -185,7 +193,11 @@ if __name__ == "__main__":
     print(w)
 
     outcomes = []
-    for i in range(100):
+    if os.path.exists(OUTCOME_RECORD_FILENAME):
+        with open(OUTCOME_RECORD_FILENAME) as f:
+            outcomes = json.load(f)
+
+    for i in range(NUM_EPISODE):
         episode, util = simulate_one_game(
             w,
             agent.MinimaxAgent(
@@ -198,33 +210,16 @@ if __name__ == "__main__":
             FEATURE_EXTRACTOR
         )
 
-        # update_weight(episode, util, w, FEATURE_EXTRACTOR)
+        update_weight(episode, util, w, FEATURE_EXTRACTOR)
         print(i, util, '+'*20 if util >= 0 else '')
         outcomes.append(util)
 
-        if i % 100 == 0:
-            with open(FILENAME, 'w') as f:
+        if i % 1000 == 0 or i == NUM_EPISODE-1:
+            with open(WEIGHT_FILENAME, 'w') as f:
                 json.dump(w, f)
+            with open(OUTCOME_RECORD_FILENAME, 'w') as f:
+                json.dump(outcomes, f)
 
-    with open(FILENAME, 'w') as f:
-        json.dump(w, f)
-
-    # EXPLORE_EPSILON = 0
-    # for i in range(200):
-    #     episode, util = simulate_one_game(
-    #         w,
-    #         agent.RandomAgent(
-    #             'O',
-    #             arena.MIN_AGENT,
-    #             # mini_expecti_max.eval_pure_builder,
-    #             # 2
-    #         ),
-    #         (4, 4)
-    #     )
-
-    #     print(i, util)
-    #     outcomes.append(util)
-
-    print(outcomes)
-    print(sum(outcomes) / len(outcomes))
+    print(outcomes[-NUM_EPISODE:])
+    print(sum(outcomes[-NUM_EPISODE:]) / len(outcomes[-NUM_EPISODE:]))
     pprint(w)
