@@ -175,7 +175,7 @@ def simulate_one_game(w, opponent, opponent_pos, feature_extractor):
     return (max_agent_history, g.history[-1].utility())
 
 
-FILENAME = 'td_arena_66_vision_1_minimax_4'
+FILENAME = 'td_arena_66_vision_1_expectimax_2_pure'
 WEIGHT_FILENAME = FILENAME+'.json'
 OUTCOME_RECORD_FILENAME = FILENAME+'.outcome.json'
 FEATURE_EXTRACTOR = dist_features
@@ -200,11 +200,11 @@ if __name__ == "__main__":
     for i in range(NUM_EPISODE):
         episode, util = simulate_one_game(
             w,
-            agent.MinimaxAgent(
+            agent.ExpectimaxAgent(
                 'O',
                 arena.MIN_AGENT,
                 mini_expecti_max.eval_pure_builder,
-                4
+                2
             ),
             (4, 4),
             FEATURE_EXTRACTOR
