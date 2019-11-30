@@ -5,15 +5,10 @@ import random
 import mini_expecti_max
 import agent
 import game
-import json
-import os
 
 
-EXPLORE_EPSILON = 0.05
-LEARNING_RATE = 0.001
-
-# EXPLORE_EPSILON = 0
-# LEARNING_RATE = 0
+EXPLORE_EPSILON = 0.03
+LEARNING_RATE = 0.0025
 
 GAMMA = 0.6
 
@@ -150,76 +145,3 @@ def update_weight(episode, util, w, feature_extractor):
 
     for key in new_weights:
         w[key] = new_weights[key]
-
-
-def simulate_one_game(w, opponent, opponent_pos, feature_extractor):
-    g = game.Game(6, 6, max_ticks=70, vision_radius=1)
-    max_agent = agent.TDAgent(
-        'X',
-        arena.MAX_AGENT,
-        w,
-        feature_extractor
-    )
-    g.add_agent(max_agent, arena.MAX_AGENT,
-                (1, 1), init_territory_radius=1)
-    min_agent = opponent
-    g.add_agent(min_agent, arena.MIN_AGENT,
-                opponent_pos, init_territory_radius=1)
-
-    g.run(quiet=True)
-
-    max_agent_history = []
-    for i, h in enumerate(g.history):
-        if h.curr_agent == arena.MAX_AGENT or i == len(g.history) - 1:
-            max_agent_history.append(h)
-    return (max_agent_history, g.history[-1].utility())
-
-
-FILENAME = 'td_arena_66_vision_1_expectimax_2_pure'
-WEIGHT_FILENAME = FILENAME+'.json'
-OUTCOME_RECORD_FILENAME = FILENAME+'.outcome.json'
-FEATURE_EXTRACTOR = dist_features
-
-NUM_EPISODE = 20000
-
-if __name__ == "__main__":
-    if os.path.exists(WEIGHT_FILENAME):
-        with open(WEIGHT_FILENAME) as f:
-            print(f'Loading weights from {WEIGHT_FILENAME}')
-            w = json.load(f)
-    else:
-        print(f'Init new weights')
-        w = init_weights(FEATURE_EXTRACTOR)
-    print(w)
-
-    outcomes = []
-    if os.path.exists(OUTCOME_RECORD_FILENAME):
-        with open(OUTCOME_RECORD_FILENAME) as f:
-            outcomes = json.load(f)
-
-    for i in range(NUM_EPISODE):
-        episode, util = simulate_one_game(
-            w,
-            agent.ExpectimaxAgent(
-                'O',
-                arena.MIN_AGENT,
-                mini_expecti_max.eval_pure_builder,
-                2
-            ),
-            (4, 4),
-            FEATURE_EXTRACTOR
-        )
-
-        update_weight(episode, util, w, FEATURE_EXTRACTOR)
-        print(i, util, '+'*20 if util >= 0 else '')
-        outcomes.append(util)
-
-        if i % 1000 == 0 or i == NUM_EPISODE-1:
-            with open(WEIGHT_FILENAME, 'w') as f:
-                json.dump(w, f)
-            with open(OUTCOME_RECORD_FILENAME, 'w') as f:
-                json.dump(outcomes, f)
-
-    print(outcomes[-NUM_EPISODE:])
-    print(sum(outcomes[-NUM_EPISODE:]) / len(outcomes[-NUM_EPISODE:]))
-    pprint(w)
