@@ -1,7 +1,8 @@
 from mctspy.games.common import TwoPlayersAbstractGameState, AbstractGameAction
-import arena
 from direction import *
 import game
+import agent
+import arena
 
 
 class MTCSArenaMove(AbstractGameAction):
@@ -16,6 +17,7 @@ class MTCSArenaMove(AbstractGameAction):
 class MTCSArena(arena.Arena, TwoPlayersAbstractGameState):
     def __init__(self, a):
         self.a = a.get_full_arena_copy()
+        self.next_to_move = a.curr_agent
 
     def game_result(self):
         if not self.a.is_end():
@@ -43,7 +45,7 @@ class MTCSArena(arena.Arena, TwoPlayersAbstractGameState):
         a_copy = self.a.get_full_arena_copy()
         a_copy.move_agent(move.curr_agent, move.direction)
 
-        MTCSArena(a_copy)
+        return MTCSArena(a_copy)
 
     def get_legal_actions(self):
         return [
@@ -54,3 +56,17 @@ class MTCSArena(arena.Arena, TwoPlayersAbstractGameState):
 
 if __name__ == "__main__":
     g = game.Game(6, 6, 50, vision_radius=10)
+
+    max_agent = agent.MTCSAgent('X', arena.MAX_AGENT)
+    g.add_agent(max_agent, arena.MAX_AGENT, (1, 1), init_territory_radius=1)
+
+    min_agent = agent.RandomAgent('O', arena.MIN_AGENT)
+    g.add_agent(min_agent, arena.MIN_AGENT, (4, 4), init_territory_radius=1)
+
+    max_agent.initialize_memory(g.arena)
+    min_agent.initialize_memory(g.arena)
+
+    direction = max_agent.get_move(g.arena)
+    print(Direction.tostring(direction))
+
+    print(g.arena)
