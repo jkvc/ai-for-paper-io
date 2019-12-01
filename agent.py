@@ -6,9 +6,7 @@ import random
 import mini_expecti_max
 from pprint import pprint
 import td_learn
-import mtcs
-from mctspy.tree.nodes import TwoPlayersGameMonteCarloTreeSearchNode
-from mctspy.tree.search import MonteCarloTreeSearch
+import json
 
 
 class Agent:
@@ -142,16 +140,22 @@ class TDAgent(Agent):
         return direction
 
 
-class MTCSAgent(Agent):
-    def get_move(self, observable):
-        self.update_memory_from_observation(observable)
+def get_td_agent(char, agent_type, weights_filename, feature_extractor):
+    with open(weights_filename) as f:
+        w = json.load(f)
+    agent = TDAgent(char, agent_type, w, feature_extractor)
+    return agent
 
-        root = TwoPlayersGameMonteCarloTreeSearchNode(
-            mtcs.MTCSArena(self.memory)
-        )
-        mcts = MonteCarloTreeSearch(root)
-        best_node = mcts.best_action(100)
+# class MTCSAgent(Agent):
+#     def get_move(self, observable):
+#         self.update_memory_from_observation(observable)
 
-        print(best_node)
+#         root = TwoPlayersGameMonteCarloTreeSearchNode(
+#             mtcs.MTCSArena(self.memory)
+#         )
+#         mcts = MonteCarloTreeSearch(root)
+#         best_node = mcts.best_action(100)
 
-        return Direction.UP
+#         print(best_node)
+
+#         return Direction.UP

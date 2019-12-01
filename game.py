@@ -2,6 +2,7 @@ from agent import *
 from direction import *
 import mini_expecti_max
 import arena
+import td_learn
 
 
 class Game:
@@ -78,28 +79,34 @@ if __name__ == "__main__":
 
     outcomes = []
 
-    for i in range(1):
+    for i in range(300):
+        print('Running game', i)
 
-        game = Game(6, 6, max_ticks=70, vision_radius=2)
-        max_agent = HumanAgent(
-            'X',
-            arena.MAX_AGENT,
-        )
+        game = Game(6, 6, max_ticks=50, vision_radius=1)
+        # max_agent = ExpectimaxAgent(
+        #     'X',
+        #     arena.MAX_AGENT,
+        #     mini_expecti_max.eval_pure_builder,
+        #     4
+        # )
+        max_agent = get_td_agent('X', arena.MAX_AGENT,
+                                 'td_train_output/td_minimax_4_pure.json',
+                                 td_learn.dist_features)
         game.add_agent(max_agent, arena.MAX_AGENT,
                        (1, 1), init_territory_radius=1)
 
-        min_agent = MinimaxAgent(
+        min_agent = ExpectimaxAgent(
             'O',
             arena.MIN_AGENT,
             mini_expecti_max.eval_pure_builder,
-            4
+            2
         )
         # min_agent = StationaryAgent('O', arena.MIN_AGENT)
         # min_agent = RandomAgent('O', arena.MIN_AGENT)
         game.add_agent(min_agent, arena.MIN_AGENT,
                        (4, 4), init_territory_radius=1)
 
-        game.run()
+        game.run(quiet=True)
         outcomes.append(game.arena.utility())
 
     print(outcomes)
