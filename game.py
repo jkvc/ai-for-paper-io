@@ -32,34 +32,36 @@ class Game:
         '''
         self.arena.add_agent(agent_obj, agent, pos, init_territory_radius)
 
+    def tick(self, quiet=False):
+        if not self.is_initialized:
+            self.initialize()
+
+        self.history.append(self.arena.get_full_arena_copy())
+
+        if not quiet:
+            print('\n[God view]')
+            print(self.arena)
+
+        curr_agent = self.arena.curr_agent
+        if not quiet:
+            print('>', self.arena.agent_str(curr_agent), 'moving...')
+
+        direction = self.arena.agent[curr_agent].get_move(
+            self.arena.get_observable_arena(
+                curr_agent, self.vision_radius)
+        )
+        if not quiet:
+            print('>', self.arena.agent_str(curr_agent),
+                  'moves', Direction.tostring(direction))
+
+        self.arena.move_agent(curr_agent, direction)
+
     def run(self, quiet=False):
         '''
         dev only, write a real game runner for production
         '''
-
-        if not self.is_initialized:
-            self.initialize()
-
         while not self.arena.is_end():
-            self.history.append(self.arena.get_full_arena_copy())
-
-            if not quiet:
-                print('\n[God view]')
-                print(self.arena)
-
-            curr_agent = self.arena.curr_agent
-            if not quiet:
-                print('>', self.arena.agent_str(curr_agent), 'moving...')
-
-            direction = self.arena.agent[curr_agent].get_move(
-                self.arena.get_observable_arena(
-                    curr_agent, self.vision_radius)
-            )
-            if not quiet:
-                print('>', self.arena.agent_str(curr_agent),
-                      'moves', Direction.tostring(direction))
-
-            self.arena.move_agent(curr_agent, direction)
+            self.tick(quiet)
 
         self.history.append(self.arena.get_full_arena_copy())
         if not quiet:

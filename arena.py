@@ -204,8 +204,9 @@ class Arena:
         arena_copy.territory[agent] = set(list(self.territory[agent]))
 
         other_agent = self.other_agent(agent)
-        if is_in_range(*self.pos[other_agent]):
-            arena_copy.pos[other_agent] = self.pos[other_agent]
+        if self.pos[other_agent] != None:
+            if is_in_range(*self.pos[other_agent]):
+                arena_copy.pos[other_agent] = self.pos[other_agent]
         for row, col in self.territory[other_agent]:
             if is_in_range(row, col):
                 arena_copy.territory[other_agent].add((row, col))
@@ -299,13 +300,13 @@ class Arena:
             strlist.append(f' {str(row).rjust(2, "0")}\n')
         strlist.append(get_horizontal_border())
 
-        strlist.append(
-            f'curr_agent: {"MAX_AGENT" if self.curr_agent == MAX_AGENT else "MIN_AGENT"} \n')
-        strlist.append(
-            f'winner: {self.agent_str(self.winner) if self.winner != None else "None"} \n')
-        strlist.append(
-            f'remaining_ticks: {self.remaining_ticks}'
-        )
+        # strlist.append(
+        #     f'curr_agent: {"MAX_AGENT" if self.curr_agent == MAX_AGENT else "MIN_AGENT"} \n')
+        # strlist.append(
+        #     f'winner: {self.agent_str(self.winner) if self.winner != None else "None"} \n')
+        # strlist.append(
+        #     f'remaining_ticks: {self.remaining_ticks}'
+        # )
 
         return ''.join(strlist)
 
