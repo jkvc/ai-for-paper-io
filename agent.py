@@ -7,6 +7,7 @@ import mini_expecti_max
 from pprint import pprint
 import td_learn
 import json
+import curses
 
 
 class Agent:
@@ -99,34 +100,6 @@ class ExpectimaxAgent(DepthSearchAgent):
         return result['dir']
 
 
-class HumanAgent(Agent):
-    def get_move(self, observable):
-        self.update_memory_from_observation(observable)
-        print('\n[Human agent memory]')
-        print(str(self.memory))
-        print('[Human agent observation]')
-        print(str(observable))
-
-        # print('minimax state')
-        # pprint(mini_expecti_max.minimax(self.memory, 6, self.eval_func))
-        print('[td_feature]')
-        pprint(td_learn.feature_extractor(self.memory))
-
-        direction = None
-        while direction == None:
-            ch = input()
-            if ch == 'w':
-                direction = Direction.UP
-            if ch == 's':
-                direction = Direction.DOWN
-            if ch == 'a':
-                direction = Direction.LEFT
-            if ch == 'd':
-                direction = Direction.RIGHT
-
-        return direction
-
-
 class TDAgent(Agent):
     def __init__(self, char, agent_type, w, feature_extractor):
         super().__init__(char, agent_type)
@@ -159,3 +132,23 @@ def get_td_agent(char, agent_type, weights_filename, feature_extractor):
 #         print(best_node)
 
 #         return Direction.UP
+
+
+class HumanAgent(Agent):
+    def __init__(self, char, agent_type, window):
+        super().__init__(char, agent_type)
+        self.window = window
+
+    def get_move(self, observable):
+        d = None
+        while d == None:
+            ch = self.window.getch()
+            if ch == curses.KEY_UP:
+                d = Direction.UP
+            if ch == curses.KEY_DOWN:
+                d = Direction.DOWN
+            if ch == curses.KEY_RIGHT:
+                d = Direction.RIGHT
+            if ch == curses.KEY_LEFT:
+                d = Direction.LEFT
+        return d

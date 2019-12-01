@@ -77,19 +77,21 @@ def render(g, window):
     add_str_block(
         13, 110, f'MIN_AGENT trail size : {len(g.arena.trail[arena.MIN_AGENT])}', window)
 
-    add_str_block(
-        18, 10, f'[ Memory + Observation ]', window)
     if loser != arena.MAX_AGENT:
         add_str_block(
-            20, 10, f'MAX_AGENT : {type(g.arena.agent[arena.MAX_AGENT]).__name__}', window)
+            20, 10, f'[ MAX_AGENT : {type(g.arena.agent[arena.MAX_AGENT]).__name__} ]', window)
         add_str_block(
             22, 10, str(g.arena.get_observable_arena(arena.MAX_AGENT, g.vision_radius)), window)
 
     if loser != arena.MIN_AGENT:
         add_str_block(
-            20, 60, f'MIN_AGENT : {type(g.arena.agent[arena.MIN_AGENT]).__name__}', window)
+            20, 60, f'[ MIN_AGENT : {type(g.arena.agent[arena.MIN_AGENT]).__name__} ]', window)
         add_str_block(
             22, 60, str(g.arena.get_observable_arena(arena.MIN_AGENT, g.vision_radius)), window)
+
+        if g.arena.agent[arena.MIN_AGENT].__class__ == agent.HumanAgent:
+            add_str_block(
+                33, 60, 'Human agent: use arrows to move ...', window)
 
     if g.arena.is_end():
         add_str_block(20, 110, '[ Winner ]', window)
@@ -106,6 +108,8 @@ def render(g, window):
             23, 110, f'Win condition : {"Elimination" if g.arena.winner != None else "Timeout"}', window)
         add_str_block(
             24, 110, f'Utility : {g.arena.utility()}', window)
+
+    add_str_block(33, 140, ' ', window)
 
     window.refresh()
 
@@ -129,32 +133,30 @@ def run_game(g, window):
     time.sleep(WINNER_ANNOUNCE_TIME)
 
 
-def run_demo(g):
+if __name__ == "__main__":
     window = init()
     try:
+        g = game.Game(7, 7, max_ticks=60, vision_radius=2)
+        # max_agent = agent.MinimaxAgent(
+        #     'X',
+        #     arena.MAX_AGENT,
+        #     mini_expecti_max.eval_pure_builder,
+        #     4
+        # )
+        max_agent = agent.get_td_agent(
+            'X', arena.MAX_AGENT, 'td_train_output/td_minimax_2_pure.json', td_learn.dist_features)
+        g.add_agent(max_agent, arena.MAX_AGENT, (1, 1), 1)
+        # min_agent = agent.MinimaxAgent(
+        #     'O',
+        #     arena.MIN_AGENT,
+        #     mini_expecti_max.eval_pure_builder,
+        #     4
+        # )
+        min_agent = agent.HumanAgent('O', arena.MIN_AGENT, window)
+        g.add_agent(min_agent, arena.MIN_AGENT, (5, 5), 1)
+
         run_game(g, window)
     except:
         raise
     finally:
         teardown(window)
-
-
-if __name__ == "__main__":
-    g = game.Game(7, 7, max_ticks=60, vision_radius=2)
-    # max_agent = agent.MinimaxAgent(
-    #     'X',
-    #     arena.MAX_AGENT,
-    #     mini_expecti_max.eval_pure_builder,
-    #     4
-    # )
-    max_agent = agent.get_td_agent(
-        'X', arena.MAX_AGENT, 'td_train_output/td_minimax_2_pure.json', td_learn.dist_features)
-    g.add_agent(max_agent, arena.MAX_AGENT, (1, 1), 1)
-    min_agent = agent.MinimaxAgent(
-        'O',
-        arena.MIN_AGENT,
-        mini_expecti_max.eval_pure_builder,
-        4
-    )
-    g.add_agent(min_agent, arena.MIN_AGENT, (5, 5), 1)
-    run_demo(g)
