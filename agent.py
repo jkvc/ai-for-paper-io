@@ -119,20 +119,6 @@ def get_td_agent(char, agent_type, weights_filename, feature_extractor):
     agent = TDAgent(char, agent_type, w, feature_extractor)
     return agent
 
-# class MTCSAgent(Agent):
-#     def get_move(self, observable):
-#         self.update_memory_from_observation(observable)
-
-#         root = TwoPlayersGameMonteCarloTreeSearchNode(
-#             mtcs.MTCSArena(self.memory)
-#         )
-#         mcts = MonteCarloTreeSearch(root)
-#         best_node = mcts.best_action(100)
-
-#         print(best_node)
-
-#         return Direction.UP
-
 
 class HumanAgent(Agent):
     def __init__(self, char, agent_type, window):

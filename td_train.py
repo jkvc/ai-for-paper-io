@@ -11,14 +11,14 @@ from pprint import pprint
 NUM_EPISODE = 20000
 
 OPPONENT_TYPE = agent.MinimaxAgent
-OPPONENT_DEPTH = 2
+OPPONENT_DEPTH = 4
 EVAL_FUNC = mini_expecti_max.eval_pure_builder
 
-FILENAME = 'td_minimax_4_pure'
+FILENAME = 'td_minimax_2_pure_arena_772'
 DEFAULT_MAX_POS = (1, 1)
-ARENA_SIZE = (6, 6)
+ARENA_SIZE = (7, 7)
 DEFAULT_MIN_POS = (ARENA_SIZE[0]-2, ARENA_SIZE[1]-2)
-VISION_RADIUS = 1
+VISION_RADIUS = 2
 MAX_TICKS = 50
 
 DIRNAME = 'td_train_output'

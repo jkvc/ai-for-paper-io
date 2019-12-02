@@ -6,9 +6,10 @@ import td_learn
 import curses
 import game
 import time
+import preset_agent
 
-SLEEP_TIME = 0
-WINNER_ANNOUNCE_TIME = 5
+SLEEP_TIME = 0.5
+WINNER_ANNOUNCE_TIME = 3
 
 
 def init():
@@ -109,14 +110,16 @@ def render(g, window):
         add_str_block(
             24, 110, f'Utility : {g.arena.utility()}', window)
 
+        add_str_block(
+            26, 110, f'Next game starting in {WINNER_ANNOUNCE_TIME} seconds...', window)
+
     add_str_block(33, 140, ' ', window)
 
     window.refresh()
 
 
-def run_game(g, window):
+def run_one_game(g, window):
     render(g, window)
-
     while True:
         time.sleep(SLEEP_TIME)
         render(g, window)
@@ -129,33 +132,28 @@ def run_game(g, window):
             break
 
     render(g, window)
-
     time.sleep(WINNER_ANNOUNCE_TIME)
 
 
 if __name__ == "__main__":
-    window = init()
-    try:
-        g = game.Game(7, 7, max_ticks=60, vision_radius=2)
-        # max_agent = agent.MinimaxAgent(
-        #     'X',
-        #     arena.MAX_AGENT,
-        #     mini_expecti_max.eval_pure_builder,
-        #     4
-        # )
-        max_agent = agent.get_td_agent(
-            'X', arena.MAX_AGENT, 'td_train_output/td_minimax_2_pure.json', td_learn.dist_features)
-        g.add_agent(max_agent, arena.MAX_AGENT, (1, 1), 1)
-        # min_agent = agent.MinimaxAgent(
-        #     'O',
-        #     arena.MIN_AGENT,
-        #     mini_expecti_max.eval_pure_builder,
-        #     4
-        # )
-        min_agent = agent.HumanAgent('O', arena.MIN_AGENT, window)
-        g.add_agent(min_agent, arena.MIN_AGENT, (5, 5), 1)
+    max_agent_ctor, min_agent_ctor = preset_agent.select_agent()
 
-        run_game(g, window)
+    window = init()
+
+    try:
+        while True:
+            g = game.Game(7, 7, max_ticks=70, vision_radius=2)
+            max_agent = max_agent_ctor(window)
+            g.add_agent(max_agent, arena.MAX_AGENT, (1, 1), 1)
+            min_agent = min_agent_ctor(window)
+            g.add_agent(min_agent, arena.MIN_AGENT, (5, 5), 1)
+
+            if min_agent.__class__ == agent.HumanAgent:
+                SLEEP_TIME = 0
+
+            run_one_game(g, window)
+    except KeyboardInterrupt:
+        pass
     except:
         raise
     finally:
