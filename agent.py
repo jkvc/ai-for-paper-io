@@ -8,6 +8,9 @@ from pprint import pprint
 import td_learn
 import json
 import curses
+import time
+
+TIME = []
 
 
 class Agent:
@@ -82,9 +85,16 @@ class DepthSearchAgent(Agent):
 
 class MinimaxAgent(DepthSearchAgent):
     def get_move(self, observable):
+        global TIME
+        begin = time.time()
+
         self.update_memory_from_observation(observable)
         result = mini_expecti_max.minimax(
             self.memory, self.depth, self.eval_func)
+
+        end = time.time()
+        TIME.append(end-begin)
+
         if 'dir' not in result:
             return Direction.UP
         return result['dir']

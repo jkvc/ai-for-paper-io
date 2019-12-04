@@ -46,10 +46,15 @@ class Game:
         if not quiet:
             print('>', self.arena.agent_str(curr_agent), 'moving...')
 
-        direction = self.arena.agent[curr_agent].get_move(
+        observable = \
+            self.arena.get_observable_arena(
+                curr_agent, 10) \
+            if self.arena.agent[curr_agent].is_god else \
             self.arena.get_observable_arena(
                 curr_agent, self.vision_radius)
-        )
+
+        direction = self.arena.agent[curr_agent].get_move(observable)
+
         if not quiet:
             print('>', self.arena.agent_str(curr_agent),
                   'moves', Direction.tostring(direction))
@@ -81,35 +86,49 @@ if __name__ == "__main__":
 
     outcomes = []
 
-    for i in range(300):
+    for i in range(1):
         print('Running game', i)
 
-        game = Game(6, 6, max_ticks=50, vision_radius=1)
-        # max_agent = ExpectimaxAgent(
-        #     'X',
-        #     arena.MAX_AGENT,
-        #     mini_expecti_max.eval_pure_builder,
-        #     4
-        # )
-        max_agent = get_td_agent('X', arena.MAX_AGENT,
-                                 'td_train_output/td_minimax_4_pure.json',
-                                 td_learn.dist_features)
+        game = Game(7, 7, max_ticks=70, vision_radius=2)
+        # max_agent = RandomAgent('X', arena.MAX_AGENT)
+        max_agent = MinimaxAgent(
+            'X', arena.MAX_AGENT,
+            mini_expecti_max.eval_pure_builder,
+            2
+        )
+        # max_agent = get_td_agent('X', arena.MAX_AGENT,
+        #                          'td_train_output/td_minimax_1_pure_arena_772.json',
+        #                          td_learn.dist_features)
         game.add_agent(max_agent, arena.MAX_AGENT,
                        (1, 1), init_territory_radius=1)
 
-        min_agent = ExpectimaxAgent(
+        # min_agent = RandomAgent('X', arena.MIN_AGENT)
+        min_agent = MinimaxAgent(
             'O',
             arena.MIN_AGENT,
             mini_expecti_max.eval_pure_builder,
             2
         )
+        # min_agent.is_god=True
         # min_agent = StationaryAgent('O', arena.MIN_AGENT)
         # min_agent = RandomAgent('O', arena.MIN_AGENT)
         game.add_agent(min_agent, arena.MIN_AGENT,
-                       (4, 4), init_territory_radius=1)
+                       (5, 5), init_territory_radius=1)
 
         game.run(quiet=True)
         outcomes.append(game.arena.utility())
 
     print(outcomes)
     print('expected outcome', sum(outcomes) / len(outcomes))
+
+    nummaxwin = 0
+    numminwin = 0
+    for util in outcomes:
+        if util > 0:
+            nummaxwin += 1
+        if util < 0:
+            numminwin += 1
+    print('max wins', nummaxwin, 'min wins', numminwin)
+
+    print(TIME)
+    print(sum(TIME) / len(TIME))
