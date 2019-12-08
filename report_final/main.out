@@ -1,0 +1,29 @@
+\BOOKMARK [1][-]{section.1}{Motivation and Objective}{}% 1
+\BOOKMARK [1][-]{section.2}{Relevant Work}{}% 2
+\BOOKMARK [1][-]{section.3}{Game Mechanics and Modeling}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Mechanics and win conditions}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Game State and Actions}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{Stateful Agents of Imperfect Information}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.4}{Utility}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{Adversarial Approach}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Modeling the minimax agent}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Updating adversary position}{section.4}% 10
+\BOOKMARK [2][-]{subsection.4.3}{Evaluation functions}{section.4}% 11
+\BOOKMARK [2][-]{subsection.4.4}{Alpha-beta pruning}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.5}{Modeling the expectimax agent}{section.4}% 13
+\BOOKMARK [1][-]{section.5}{Reinforcement Learning}{}% 14
+\BOOKMARK [2][-]{subsection.5.1}{Modeling the TD learning agent}{section.5}% 15
+\BOOKMARK [2][-]{subsection.5.2}{TD learning over Q learning: symmetric actions}{section.5}% 16
+\BOOKMARK [2][-]{subsection.5.3}{State features}{section.5}% 17
+\BOOKMARK [2][-]{subsection.5.4}{Updating adversary position}{section.5}% 18
+\BOOKMARK [2][-]{subsection.5.5}{Training Performance}{section.5}% 19
+\BOOKMARK [2][-]{subsection.5.6}{Generalizability}{section.5}% 20
+\BOOKMARK [1][-]{section.6}{Test Results and Evaluation}{}% 21
+\BOOKMARK [2][-]{subsection.6.1}{Expected performance}{section.6}% 22
+\BOOKMARK [2][-]{subsection.6.2}{Unexpected performance}{section.6}% 23
+\BOOKMARK [1][-]{section.7}{Conclusion}{}% 24
+\BOOKMARK [1][-]{section.8}{Future Work}{}% 25
+\BOOKMARK [2][-]{subsection.8.1}{Multi-agent adversarial game}{section.8}% 26
+\BOOKMARK [2][-]{subsection.8.2}{RL with multi-layer network}{section.8}% 27
+\BOOKMARK [2][-]{subsection.8.3}{MCTS agent}{section.8}% 28
+\BOOKMARK [2][-]{subsection.8.4}{Decaying memory confidence}{section.8}% 29
